@@ -1,0 +1,176 @@
+site_name: Componego Documentation
+site_description: The most flexible and very simple component-oriented framework for GoLang applications.
+site_author: Volodymyr Konstanchuk
+site_url: https://componego.github.io/
+author_site: https://github.com/konstanchuk
+
+# Repository
+repo_name: componego/componego
+repo_url: https://github.com/componego/componego
+
+# Theme Configuration
+theme:
+  name: material
+  custom_dir: ./mkdocs/theme/
+  language: en
+  logo: assets/images/logo.png
+  favicon: assets/images/favicon.ico
+  social_image: assets/images/social.png
+  social_title_prefix: The Componego Framework
+  palette:
+    - scheme: slate
+      primary: red
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+    - scheme: default
+      primary: red
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      note: octicons/tag-16
+      abstract: octicons/checklist-16
+      info: octicons/info-16
+      tip: octicons/squirrel-16
+      success: octicons/check-16
+      question: octicons/question-16
+      warning: octicons/alert-16
+      failure: octicons/x-circle-16
+      danger: octicons/zap-16
+      bug: octicons/bug-16
+      example: octicons/beaker-16
+      quote: octicons/quote-16
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.sections
+    - navigation.path
+    - navigation.indexes
+    - navigation.top
+    - navigation.expand
+    - navigation.footer
+    - content.code.copy
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - search.share
+
+# Base Documentation Directory
+docs_dir: pages
+
+# Hot Reload Directories
+watch:
+  - ./pages
+  - ./mkdocs
+
+# Extensions
+markdown_extensions:
+  - attr_list
+  - md_in_html
+  - admonition
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.betterem
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - toc:
+      permalink: true
+
+# Plugins
+plugins:
+  - search:
+      lang: en
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
+      cache_safe: true
+      css_files:
+        - assets/stylesheets/extra.css
+
+# Hooks
+hooks:
+  - ./mkdocs/hooks/navigation.py
+  - ./mkdocs/hooks/social.py
+
+# Additional Configuration
+extra:
+  generator: true
+  analytics:
+    provider: google
+    property: G-P2QQJ852WD
+  meta:
+    - name: generator
+      content: Material for MkDocs
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/componego
+      name: Github
+  homepage_menu:
+    - name: Components
+      url: impl/component/
+    - name: Dependency Injection
+      url: impl/dependency/
+    - name: Error handling
+      url: impl/application/#applicationerrorhandler
+    - name: Configuration
+      url: impl/config/
+    - name: Testing
+      url: tests/runner/
+
+# Additional Styles
+extra_css:
+  - assets/stylesheets/extra.css
+
+# Validation Rules
+validation:
+  absolute_links: ignore
+
+# Page Tree
+nav:
+  - Get Started: get-started.md
+  - Implementation:
+      - Application: impl/application.md
+      - Application Runner: impl/runner.md
+      - Application Driver: impl/driver.md
+      - Application Environment: impl/environment.md
+      - Application Components: impl/component.md
+      - Dependency Injection: impl/dependency.md
+      - Configuration: impl/config.md
+      - Processors: impl/processor.md
+  - Testing:
+      - Application Mock: tests/mock.md
+      - Tests Runner: tests/runner.md
+  - Built-in Components:
+      - Graceful-Shutdown: qcomponents/graceful-shutdown.md
+  - Examples:
+      - Hello World: https://github.com/componego/componego/tree/master/examples/hello-app
+      - URL Shortener: https://github.com/componego/componego/tree/master/examples/url-shortener-app
+  - Contribution:
+      - Contribution Guide: contribution/guide.md

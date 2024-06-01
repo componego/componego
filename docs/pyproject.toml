@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "componego-documentation"
+version = "0.1.0"
+description = "Componego Documentation"
+authors = ["Volodymyr Konstanchuk"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mkdocs-material = "^9.5.21"
+mkdocs-minify-plugin = "^0.8.0"
+mkdocs-material-extensions = "^1.3.1"
+beautifulsoup4 = "^4.12.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

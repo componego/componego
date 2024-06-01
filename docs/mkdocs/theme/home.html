@@ -1,0 +1,53 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+{{ super() }}
+<style>{% include "./assets/stylesheets/home.css" %}</style>
+<section class="mdx-container">
+    <div class="md-grid md-typeset">
+        <div class="mdx-hero">
+            <div class="mdx-hero__content">
+                <h1 class="hero-name">Componego Framework</h1>
+                <p class="hero-description">{{ config.site_description }}</p>
+                <a href="{{ 'get-started/' | url }}"
+                    title="Quick start"
+                    class="md-button md-button--primary">Quick start</a>
+                <a href="{{ 'impl/application/' | url }}"
+                    title="Read the Docs"
+                    class="md-button">Read the Docs</a>
+            </div>
+            <div class="mdx-hero__menu">
+                {% for menu_item in config.extra.homepage_menu %}
+                <div class="mdx-hero__menu-item">
+                    <a href="{{ menu_item.url | url }}">{{ menu_item.name | e }}</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+    function homepageAnimation() {
+        if (!window.location$) {
+            window.setTimeout(homepageAnimation, 100);
+            return;
+        }
+        const div = document.createElement('div');
+        div.className = 'circles-animation';
+        for (let i = 0; i < 10; i++) {
+            div.append(document.createElement('div'));
+        }
+        const img = document.createElement('img');
+        img.src = "{{ 'assets/images/gopher-eyes.webp' | url }}";
+        img.className = 'gopher-eyes';
+        div.getElementsByTagName('div')[5].appendChild(img);
+        window.location$.subscribe(function () {
+            div.remove();
+        });
+        document.body.insertBefore(div, document.body.firstChild);
+    }
+    homepageAnimation();
+</script>
+{% endblock %}
+
+{% block content %}{% endblock %}

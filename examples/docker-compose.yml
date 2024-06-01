@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  componego-example-hello-app:
+    build:
+      context: ..
+      dockerfile: ./examples/hello-app/Dockerfile
+  componego-example-url-shortener-app:
+    build:
+      context: ..
+      dockerfile: ./examples/url-shortener-app/Dockerfile
+    ports:
+      - "8080:8080"

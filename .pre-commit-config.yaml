@@ -1,0 +1,16 @@
+repos:
+  - repo: 'https://github.com/pre-commit/pre-commit-hooks'
+    rev: v4.6.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-added-large-files
+        args:
+          - '--maxkb=200'
+  - repo: local
+    hooks:
+      - id: componego-framework-development
+        name: Componego Framework Development Hook
+        entry: 'python ./scripts/make.py commit:hook'
+        language: python
+        pass_filenames: false

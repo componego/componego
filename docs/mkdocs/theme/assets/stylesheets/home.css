@@ -1,0 +1,223 @@
+.md-header {
+    position: initial;
+}
+
+.md-main {
+    flex-grow: unset;
+}
+
+.md-main__inner {
+    margin: 0;
+}
+
+.md-content {
+    display: none;
+}
+
+.mdx-hero {
+    text-align: center;
+}
+
+.mdx-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.mdx-container .hero-name {
+    font-size: 57px;
+    font-weight: 800;
+    margin: 5px;
+    text-transform: uppercase;
+    user-select: none;
+}
+
+.mdx-container .hero-description {
+    margin: 10px;
+}
+
+.mdx-container .md-button {
+    margin: 5px 1px;
+}
+
+.mdx-container .mdx-hero__menu {
+    margin: 30px auto 0;
+}
+
+.mdx-container .mdx-hero__menu-item {
+    display: inline-block;
+    padding: 0 10px;
+    text-wrap: nowrap;
+    margin-bottom: 7px;
+}
+
+.mdx-container .mdx-hero__menu-item a {
+    display: inline-block;
+    padding: 7px 0;
+    position: relative;
+    text-wrap: nowrap;
+}
+
+.mdx-container .mdx-hero__menu-item a:hover {
+    color: var(--md-typeset-a-color);
+}
+
+.mdx-container .mdx-hero__menu-item a:after {
+    bottom: 0;
+    content: "";
+    display: block;
+    height: 2px;
+    position: absolute;
+    background: var(--md-typeset-a-color);
+    transition: width 0.3s ease 0s, left 0.3s ease 0s;
+    width: 100%;
+    left: 0;
+}
+
+.mdx-container .mdx-hero__menu-item a:hover:after {
+    width: 0;
+    left: 50%;
+}
+
+@media screen and (min-width: 60em) {
+    .md-sidebar--secondary {
+        display: none;
+    }
+}
+
+@media screen and (min-width: 76.25em) {
+    .md-sidebar--primary {
+        display: none;
+    }
+
+    .md-main {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 76.25em) {
+    .h1-text {
+        font-size: 40px;
+    }
+}
+
+
+/* animation -> https://codepen.io/alvarotrigo/pen/GRvYNax */
+.circles-animation {
+    position: fixed;
+    width: 100%;
+    height: 0;
+    bottom: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: -1;
+}
+
+.circles-animation div{
+    position: absolute;
+    display: block;
+    list-style: none;
+    width: 20px;
+    height: 20px;
+    background: #448aff;
+    animation: circles-animation 25s linear infinite;
+    bottom: -150px;
+}
+
+.circles-animation div:nth-child(1){
+    left: 25%;
+    width: 80px;
+    height: 80px;
+    animation-delay: 0s;
+}
+
+.circles-animation div:nth-child(2){
+    left: 10%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 2s;
+    animation-duration: 12s;
+}
+
+.circles-animation div:nth-child(3){
+    left: 70%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 4s;
+}
+
+.circles-animation div:nth-child(4){
+    left: 40%;
+    width: 60px;
+    height: 60px;
+    animation-delay: 0s;
+    animation-duration: 18s;
+}
+
+.circles-animation div:nth-child(5){
+    left: 65%;
+    width: 20px;
+    height: 20px;
+    animation-delay: 0s;
+}
+
+.circles-animation div:nth-child(6){
+    left: 75%;
+    width: 110px;
+    height: 110px;
+    animation-delay: 3s;
+}
+
+.circles-animation div:nth-child(7){
+    left: 35%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 7s;
+}
+
+.circles-animation div:nth-child(8){
+    left: 50%;
+    width: 25px;
+    height: 25px;
+    animation-delay: 15s;
+    animation-duration: 45s;
+}
+
+.circles-animation div:nth-child(9){
+    left: 20%;
+    width: 15px;
+    height: 15px;
+    animation-delay: 2s;
+    animation-duration: 35s;
+}
+
+.circles-animation div:nth-child(10){
+    left: 85%;
+    width: 150px;
+    height: 150px;
+    animation-delay: 0s;
+    animation-duration: 11s;
+}
+
+.circles-animation img.gopher-eyes {
+    display: block;
+    margin: 3px auto;
+    width: 90%;
+    opacity: 0.8;
+}
+
+@keyframes circles-animation {
+    0%{
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        border-radius: 0;
+    }
+    100%{
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}

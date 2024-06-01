@@ -1,0 +1,24 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  main:
+    strategy:
+      matrix:
+        go-version: [ 1.22.x ]
+        os-version: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os-version }}
+    name: GoLang ${{ matrix.go-version }}, ${{ matrix.os-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.10.14
+      - run: python ./scripts/make.py github:actions

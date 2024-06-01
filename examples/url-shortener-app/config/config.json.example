@@ -1,0 +1,11 @@
+{
+    "server": {
+        "addr": ":${ENV:URL_SHORTENER_PORT|8080}"
+    },
+    "databases": {
+        "main-storage": {
+            "driver": "db-driver",
+            "source": "${ENV:URL_SHORTENER_DB_USERNAME}:${ENV:URL_SHORTENER_DB_PASSWORD}@tcp(0.0.0.0:3306)/url-shortener"
+        }
+    }
+}

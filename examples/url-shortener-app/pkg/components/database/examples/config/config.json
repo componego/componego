@@ -1,0 +1,8 @@
+{
+    "databases": {
+        "<connection name>": {
+            "driver": "<driver name>",
+            "source": "<connection DNS>"
+        }
+    }
+}

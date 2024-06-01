@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: componego-docs
+    working_dir: /docs
+    volumes:
+      - .:/docs:cached
+    ports:
+      - "8123:8123"

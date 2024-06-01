@@ -1,0 +1,17 @@
+<div class="md-copyright">
+    <div class="md-copyright__highlight">
+        Copyright &copy; 2024 - present
+        <a href="{{ config.author_site }}" target="_blank">{{ config.site_author }}</a>
+        {% if config.repo_url %}
+        | <a href="{{ config.repo_url }}/blob/master/LICENSE" target="_blank">LICENCE</a>
+        {% endif %}
+    </div>
+    {% if config.extra.generator %}
+    <div class="site-generator">
+        Website created with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank">
+            Material for MkDocs
+        </a>
+    </div>
+    {% endif %}
+</div>
