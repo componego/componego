@@ -96,13 +96,14 @@ func (m *manager) Populate(target any) error {
 	if target == nil {
 		return ErrNilArgument
 	}
-	reflectType := reflect.TypeOf(target)
-	if isAllowedTarget(reflectType) {
+	reflectType := reflect.TypeOf(target).Elem()
+	if reflectType.Kind() != reflect.Interface &&
+		(reflectType.Kind() != reflect.Pointer || reflectType.Elem().Kind() != reflect.Struct) {
 		return ErrNotAllowedTarget.WithOptions(
 			xerrors.NewOption("componego:dependency:target", reflectType),
 		)
 	}
-	value, err := m.container.GetValue(reflectType.Elem())
+	value, err := m.container.GetValue(reflectType)
 	if err != nil {
 		return ErrDependencyManager.WithError(err,
 			xerrors.NewOption("componego:dependency:target", reflectType),
@@ -118,7 +119,7 @@ func (m *manager) PopulateFields(target any) error {
 		return ErrNilArgument
 	}
 	reflectType := reflect.TypeOf(target)
-	if !isAllowedTarget(reflectType) {
+	if reflectType.Kind() != reflect.Pointer || reflectType.Elem().Kind() != reflect.Struct {
 		return ErrNotAllowedTarget.WithOptions(
 			xerrors.NewOption("componego:dependency:target", reflectType),
 		)
@@ -207,9 +208,4 @@ func getDefaultDependencies(env componego.Environment) []componego.Dependency {
 		env.ConfigProvider,
 		env.DependencyInvoker,
 	}
-}
-
-func isAllowedTarget(reflectType reflect.Type) bool {
-	// Only the struct as a pointer is allowed.
-	return reflectType.Kind() == reflect.Pointer && reflectType.Elem().Kind() == reflect.Struct
 }
