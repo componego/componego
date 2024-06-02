@@ -118,6 +118,12 @@ func NotPanics(t *testing.T, fn func(), msgAndArgs ...any) {
 	call("NotPanics", t, fn, msgAndArgs)
 }
 
+// PanicsWithError is a proxy function for require.PanicsWithError.
+func PanicsWithError(t *testing.T, errString string, fn func(), msgAndArgs ...any) {
+	t.Helper()
+	call("PanicsWithError", t, errString, fn, msgAndArgs)
+}
+
 // FailNow is a proxy function for require.FailNow.
 func FailNow(t *testing.T, failureMessage string, msgAndArgs ...any) {
 	t.Helper()

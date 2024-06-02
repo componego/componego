@@ -221,7 +221,7 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 				xerrors.NewOption("componego:dependency:container:providedType", itemType),
 			)
 		}
-		c.addRewriteToCheck(itemType)
+		c.addRewriteToCheck(itemType) // TODO
 		// There is no need for a factory here because the value is already ready.
 		c.nodes[itemType] = &node{
 			value:    reflect.ValueOf(item),
@@ -298,7 +298,7 @@ type node struct {
 func isAllowedFactoryReturnType(reflectType reflect.Type) bool {
 	switch reflectType.Kind() {
 	case reflect.Interface:
-		return true
+		return !utils.IsErrorType(reflectType)
 	case reflect.Func:
 		return true
 	case reflect.Pointer:

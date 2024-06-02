@@ -19,10 +19,17 @@ package tests
 import (
 	"testing"
 
+	"github.com/componego/componego"
 	"github.com/componego/componego/impl/environment/managers/dependency/container"
 )
 
-func BenchmarkContainerInitialize(b *testing.B) {
+func TestDependencyContainer(t *testing.T) {
+	DependencyContainerTester(t, func() (container.Container, func([]componego.Dependency) error) {
+		return container.New(5)
+	})
+}
+
+func BenchmarkDependencyContainerInitialize(b *testing.B) {
 	factories := GenerateTestFactories(1000, 5)
 	b.Run("dependency container initialize", func(b *testing.B) {
 		b.ReportAllocs()
