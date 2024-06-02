@@ -44,7 +44,7 @@ func Invoke[T any](fn any, env componego.Environment) (T, error) {
 	if result, ok := value.(T); ok {
 		return result, nil
 	}
-	return *new(T), fmt.Errorf("сould not convert the returned value to type %T", *new(T))
+	return *new(T), fmt.Errorf("could not convert the returned value to type %T", *new(T))
 }
 
 func InvokeOrPanic[T any](fn any, env componego.Environment) T {

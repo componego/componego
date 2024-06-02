@@ -32,7 +32,7 @@ func Get[T any](configKey string, processor componego.Processor, env componego.E
 	if result, ok := value.(T); ok {
 		return result, nil
 	}
-	return *new(T), fmt.Errorf("сould not convert the value for the '%s' to type %T", configKey, *new(T))
+	return *new(T), fmt.Errorf("could not convert the value for the '%s' to type %T", configKey, *new(T))
 }
 
 func GetOrPanic[T any](configKey string, processor componego.Processor, env componego.Environment) T {

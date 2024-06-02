@@ -145,7 +145,7 @@ func (p *proxy) contextCall(functionName string, function contextFunction, args 
 		r := recover()
 		if r == nil {
 			if !ctx.validated {
-				// make sure you call сtx.Validated() in your code after casting the function arguments.
+				// make sure you call ctx.Validated() in your code after casting the function arguments.
 				err = p.getError(ErrArgumentsNotValidated, functionName)
 			}
 		} else if ctx.validationFailed || !ctx.validated {

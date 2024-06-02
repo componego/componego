@@ -200,10 +200,12 @@ Although in this case, you could use closures.
 This is a function that fills a variable, which is a pointer.
     ```go
     var service *Service
-    err := env.DependencyInvoker().Populate(service)
+    err := env.DependencyInvoker().Populate(&service)
     ```
 !!! note
     The type of the variable must exactly match the requested type.
+
+    Also, note the pointer and pointer dereferences in the example above. It is expected that ^^*Service^^ type has been provided for dependencies.
 
     The difference between functions ^^Populate^^ and ^^Invoke^^ is that the first function can only accept a struct because only a struct can be a pointer.
     At the same time, the second function can accept arguments of any type included in the list of allowed types for dependencies.
