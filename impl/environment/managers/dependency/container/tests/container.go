@@ -20,16 +20,19 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"testing"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/environment/managers/dependency/container"
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/internal/testing/require"
 	"github.com/componego/componego/internal/testing/types"
 )
 
-func DependencyContainerTester(t *testing.T, factory func() (container.Container, func([]componego.Dependency) error)) {
-	t.Run("basic constructor", func(t *testing.T) {
+func DependencyContainerTester[T testing.T](
+	t testing.TRun[T],
+	factory func() (container.Container, func([]componego.Dependency) error),
+) {
+	t.Run("basic constructor", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -45,7 +48,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Same(t, reflectValue1.Interface(), reflectValue2.Interface())
 	})
 
-	t.Run("dependency as Value", func(t *testing.T) {
+	t.Run("dependency as value", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			&types.AStruct{},
@@ -59,7 +62,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Same(t, reflectValue1.Interface(), reflectValue2.Interface())
 	})
 
-	t.Run("getting a Value that is not provided", func(t *testing.T) {
+	t.Run("getting a value that is not provided", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			&types.AStruct{},
@@ -68,7 +71,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.ErrorIs(t, err, container.ErrNotFoundType)
 	})
 
-	t.Run("constructor that returns an error", func(t *testing.T) {
+	t.Run("constructor that returns an error", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() (*types.AStruct, error) {
@@ -80,7 +83,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.IsType(t, &types.AStruct{}, reflectValue.Interface())
 	})
 
-	t.Run("error is not the last return Value", func(t *testing.T) {
+	t.Run("error is not the last return value", func(t T) {
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{
 			func() (error, *types.AStruct) {
@@ -89,7 +92,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}), container.ErrInvalidProvidedType)
 	})
 
-	t.Run("returning multiple Values from the one constructor", func(t *testing.T) {
+	t.Run("returning multiple Values from the one constructor", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() (*types.AStruct, *types.BStruct, error) {
@@ -104,7 +107,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.IsType(t, &types.BStruct{}, reflectValue2.Interface())
 	})
 
-	t.Run("returning values from the several constructor", func(t *testing.T) {
+	t.Run("returning values from the several constructor", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -122,7 +125,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.IsType(t, &types.BStruct{}, reflectValue2.Interface())
 	})
 
-	t.Run("the constructor returns an error", func(t *testing.T) {
+	t.Run("the constructor returns an error", func(t T) {
 		_, initializer := factory()
 		errCustom := errors.New("custom error")
 		err := initializer([]componego.Dependency{
@@ -134,7 +137,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.ErrorIs(t, err, container.ErrGettingDependency)
 	})
 
-	t.Run("constructor that expects other dependencies", func(t *testing.T) {
+	t.Run("constructor that expects other dependencies", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -155,7 +158,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Same(t, reflectValue2.Interface().(*types.BStruct).AStruct, reflectValue1.Interface())
 	})
 
-	t.Run("the constructor expects a type that was not provided", func(t *testing.T) {
+	t.Run("the constructor expects a type that was not provided", func(t T) {
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{
 			func(aStruct *types.AStruct) (*types.BStruct, error) {
@@ -166,7 +169,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}), container.ErrUndeclaredDependency)
 	})
 
-	t.Run("cyclic dependencies", func(t *testing.T) {
+	t.Run("cyclic dependencies", func(t T) {
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{
 			func(_ *types.BStruct) *types.AStruct {
@@ -178,7 +181,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}), container.ErrCyclicDependencies)
 	})
 
-	t.Run("no dependencies", func(t *testing.T) {
+	t.Run("no dependencies", func(t T) {
 		_, initializer := factory()
 		require.NoError(t, initializer(nil))
 		_, initializer = factory()
@@ -195,7 +198,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}))
 	})
 
-	t.Run("not supported type for dependency constructor", func(t *testing.T) {
+	t.Run("not supported type for dependency constructor", func(t T) {
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{nil}), container.ErrNilFactory)
 		notSupportedConstructors := [...]componego.Dependency{
@@ -229,7 +232,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}
 	})
 
-	t.Run("variadic constructor", func(t *testing.T) {
+	t.Run("variadic constructor", func(t T) {
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -241,7 +244,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}), container.ErrVariadicFactory)
 	})
 
-	t.Run("constructor that returns a function as a dependency", func(t *testing.T) {
+	t.Run("constructor that returns a function as a dependency", func(t T) {
 		c, initializer := factory()
 		someFunc := func() int { return 123 }
 		require.NoError(t, initializer([]componego.Dependency{
@@ -254,7 +257,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Equal(t, reflectValue.Interface().(func() int)(), 123)
 	})
 
-	t.Run("constructor that returns an interface", func(t *testing.T) {
+	t.Run("constructor that returns an interface", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -277,7 +280,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Equal(t, 321, reflectValue2.Interface().(*types.AStruct).Value)
 	})
 
-	t.Run("several identical return types", func(t *testing.T) {
+	t.Run("several identical return types", func(t T) {
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{
 			func() (*types.AStruct, *types.AStruct) {
@@ -293,7 +296,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		}))
 	})
 
-	t.Run("rewriting dependencies", func(t *testing.T) {
+	t.Run("rewriting dependencies", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -329,7 +332,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Equal(t, 123, reflectValue1.Interface().(*types.AStruct).Value)
 	})
 
-	t.Run("rewriting a type that is added without using a constructor", func(t *testing.T) {
+	t.Run("rewriting a type that is added without using a constructor", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			&types.AStruct{
@@ -361,7 +364,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Equal(t, 123, reflectValue1.Interface().(*types.AStruct).Value)
 	})
 
-	t.Run("rewriting dependencies with error as last return Value", func(t *testing.T) {
+	t.Run("rewriting dependencies with error as last return Value", func(t T) {
 		c, initializer := factory()
 		require.NoError(t, initializer([]componego.Dependency{
 			func() *types.AStruct {
@@ -397,7 +400,7 @@ func DependencyContainerTester(t *testing.T, factory func() (container.Container
 		require.Equal(t, 123, reflectValue1.Interface().(*types.AStruct).Value)
 	})
 
-	t.Run("incorrect dependency rewrite", func(t *testing.T) {
+	t.Run("incorrect dependency rewrite", func(t T) {
 		// Return types must match the previous constructor.
 		_, initializer := factory()
 		require.ErrorIs(t, initializer([]componego.Dependency{

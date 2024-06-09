@@ -18,16 +18,19 @@ package tests
 
 import (
 	"errors"
-	"testing"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/environment/managers/dependency"
 	"github.com/componego/componego/impl/environment/managers/dependency/container"
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/internal/testing/require"
 	"github.com/componego/componego/internal/testing/types"
 )
 
-func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyInvoker, func(container.Container) error)) {
+func DependencyManagerTester[T testing.TRun[T]](
+	t testing.TRun[T],
+	factory func() (componego.DependencyInvoker, func(container.Container) error),
+) {
 	aStruct1 := &types.AStruct{
 		Value: 123,
 	}
@@ -52,30 +55,30 @@ func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyI
 		},
 	}))
 
-	t.Run("Invoke", func(t *testing.T) {
-		t.Run("nil argument", func(t *testing.T) {
+	t.Run("Invoke", func(t T) {
+		t.Run("nil argument", func(t T) {
 			_, err := diManager.Invoke(nil)
 			require.ErrorIs(t, err, dependency.ErrNilArgument)
 		})
 
-		t.Run("not a function", func(t *testing.T) {
+		t.Run("not a function", func(t T) {
 			var value *types.AStruct
 			_, err := diManager.Invoke(value)
 			require.ErrorIs(t, err, dependency.ErrNotFunction) // you should use Populate.
 		})
 
-		t.Run("variadic function", func(t *testing.T) {
+		t.Run("variadic function", func(t T) {
 			_, err := diManager.Invoke(func(_ ...types.AInterface) {})
 			require.ErrorIs(t, err, dependency.ErrVariadicFunction)
 		})
 
-		t.Run("without arguments", func(t *testing.T) {
+		t.Run("without arguments", func(t T) {
 			value, err := diManager.Invoke(func() {})
 			require.NoError(t, err)
 			require.Nil(t, value)
 		})
 
-		t.Run("function with dependency", func(t *testing.T) {
+		t.Run("function with dependency", func(t T) {
 			value, err := diManager.Invoke(func(aStruct *types.AStruct, _ *types.BStruct) int {
 				return aStruct.Value
 			})
@@ -83,7 +86,7 @@ func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyI
 			require.Equal(t, aStruct2.Value, value)
 		})
 
-		t.Run("return error as last value", func(t *testing.T) {
+		t.Run("return error as last value", func(t T) {
 			value, err := diManager.Invoke(func(_ types.AInterface) error {
 				return errCustom
 			})
@@ -109,14 +112,14 @@ func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyI
 			require.Equal(t, 123.456, value)
 		})
 
-		t.Run("getting a non-existent dependency", func(t *testing.T) {
+		t.Run("getting a non-existent dependency", func(t T) {
 			value, err := diManager.Invoke(func(_ *types.CStruct) {})
 			require.ErrorIs(t, err, dependency.ErrDependencyManager)
 			require.ErrorIs(t, err, container.ErrNotFoundType)
 			require.Nil(t, value)
 		})
 
-		t.Run("returning a value from a function", func(t *testing.T) {
+		t.Run("returning a value from a function", func(t T) {
 			value, err := diManager.Invoke(func(_ types.AInterface) (bool, string) {
 				return false, ""
 			})
@@ -128,8 +131,8 @@ func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyI
 		})
 	})
 
-	t.Run("Populate", func(t *testing.T) {
-		t.Run("value as struct", func(t *testing.T) {
+	t.Run("Populate", func(t T) {
+		t.Run("value as struct", func(t T) {
 			var value1 *types.AStruct
 			require.NoError(t, diManager.Populate(&value1))
 			require.Same(t, aStruct2, value1)
@@ -140,26 +143,26 @@ func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyI
 			require.ErrorIs(t, diManager.Populate(&value2), dependency.ErrNotAllowedTarget)
 		})
 
-		t.Run("value as interface", func(t *testing.T) {
+		t.Run("value as interface", func(t T) {
 			var value types.AInterface
 			require.NoError(t, diManager.Populate(&value))
 			require.Equal(t, aStruct1.Value, value.(*types.AStruct).Value)
 			require.ErrorIs(t, diManager.Populate(value), dependency.ErrNotAllowedTarget) // missing &.
 		})
 
-		t.Run("nil value", func(t *testing.T) {
+		t.Run("nil value", func(t T) {
 			require.ErrorIs(t, diManager.Populate(nil), dependency.ErrNilArgument)
 		})
 
-		t.Run("not provided type", func(t *testing.T) {
+		t.Run("not provided type", func(t T) {
 			var value *types.CStruct
 			require.ErrorIs(t, diManager.Populate(&value), dependency.ErrDependencyManager)
 			require.ErrorIs(t, diManager.Populate(&value), container.ErrNotFoundType)
 		})
 	})
 
-	t.Run("PopulateFields", func(t *testing.T) {
-		t.Run("filling public and private keys with a special tag", func(t *testing.T) {
+	t.Run("PopulateFields", func(t T) {
+		t.Run("filling public and private keys with a special tag", func(t T) {
 			value := &types.CStruct{}
 			require.NoError(t, diManager.PopulateFields(value))
 			require.Same(t, aStruct2, value.PublicField1)
@@ -170,17 +173,17 @@ func DependencyManagerTester(t *testing.T, factory func() (componego.DependencyI
 			require.Nil(t, value.IncorrectTag2)
 		})
 
-		t.Run("type not provided", func(t *testing.T) {
+		t.Run("type not provided", func(t T) {
 			value := &types.DStruct{}
 			require.ErrorIs(t, diManager.PopulateFields(value), dependency.ErrDependencyManager)
 			require.ErrorIs(t, diManager.PopulateFields(value), container.ErrNotFoundType)
 		})
 
-		t.Run("nil argument", func(t *testing.T) {
+		t.Run("nil argument", func(t T) {
 			require.ErrorIs(t, diManager.PopulateFields(nil), dependency.ErrNilArgument)
 		})
 
-		t.Run("not a pointer", func(t *testing.T) {
+		t.Run("not a pointer", func(t T) {
 			value1 := types.CStruct{}
 			require.ErrorIs(t, diManager.PopulateFields(value1), dependency.ErrNotAllowedTarget)
 			value2 := "string"

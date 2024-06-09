@@ -17,15 +17,14 @@ limitations under the License.
 package tests
 
 import (
-	"testing"
-
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/environment/managers/component"
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/internal/testing/require"
 )
 
-func ComponentManagerTester(
-	t *testing.T,
+func ComponentManagerTester[T testing.T](
+	t testing.TRun[T],
 	factory func() (componego.ComponentProvider, func([]componego.Component) error),
 ) {
 	redLevel10 := component.NewFactory("red", "red:1.0")
@@ -60,7 +59,7 @@ func ComponentManagerTester(
 		}, nil
 	})
 	// run tests
-	t.Run("test 1", func(t *testing.T) {
+	t.Run("test 1", func(t T) {
 		manager, initializer := factory()
 		require.NoError(t, initializer([]componego.Component{
 			redLevel10.Build(),
@@ -76,7 +75,7 @@ func ComponentManagerTester(
 			"red:1.0",
 		}, getUniqueIdentifiers(manager.Components()))
 	})
-	t.Run("test 2", func(t *testing.T) {
+	t.Run("test 2", func(t T) {
 		manager, initializer := factory()
 		require.NoError(t, initializer([]componego.Component{
 			purpleLevel10.Build(),
@@ -92,7 +91,7 @@ func ComponentManagerTester(
 			"red:1.0",
 		}, getUniqueIdentifiers(manager.Components()))
 	})
-	t.Run("test 3", func(t *testing.T) {
+	t.Run("test 3", func(t T) {
 		blueLevel1 := component.NewFactory("blue", "blue:1.0")
 		manager, initializer := factory()
 		require.NoError(t, initializer([]componego.Component{
@@ -108,7 +107,7 @@ func ComponentManagerTester(
 			"red:1.0",
 		}, getUniqueIdentifiers(manager.Components()))
 	})
-	t.Run("cyclic dependencies 1", func(t *testing.T) {
+	t.Run("cyclic dependencies 1", func(t T) {
 		blueLevel10 := component.NewFactory("blue", "blue:1.0")
 		blueLevel10.SetComponentComponents(func() ([]componego.Component, error) {
 			return []componego.Component{
@@ -122,7 +121,7 @@ func ComponentManagerTester(
 		}), component.ErrCyclicDependencies)
 		require.Len(t, manager.Components(), 0)
 	})
-	t.Run("cyclic dependencies 2", func(t *testing.T) {
+	t.Run("cyclic dependencies 2", func(t T) {
 		blueLevel10 := component.NewFactory("blue", "blue:1.0")
 		blueLevel10.SetComponentComponents(func() ([]componego.Component, error) {
 			return []componego.Component{
@@ -136,7 +135,7 @@ func ComponentManagerTester(
 		}), component.ErrCyclicDependencies)
 		require.Len(t, manager.Components(), 0)
 	})
-	t.Run("get components", func(t *testing.T) {
+	t.Run("get components", func(t T) {
 		manager, initializer := factory()
 		require.NoError(t, initializer([]componego.Component{
 			redLevel10.Build(),

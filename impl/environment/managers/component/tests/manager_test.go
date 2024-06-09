@@ -23,5 +23,5 @@ import (
 )
 
 func TestComponentManager(t *testing.T) {
-	ComponentManagerTester(t, component.NewManager)
+	ComponentManagerTester[*testing.T](t, component.NewManager)
 }

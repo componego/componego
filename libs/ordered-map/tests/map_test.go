@@ -23,7 +23,7 @@ import (
 )
 
 func TestOrderedMap(t *testing.T) {
-	MapTester(t, ordered_map.New[int, float64])
+	MapTester[*testing.T](t, ordered_map.New[int, float64])
 }
 
 func BenchmarkOrderedMap(b *testing.B) {

@@ -20,14 +20,17 @@ import (
 	"errors"
 	"reflect"
 	"strings"
-	"testing"
 
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/libs/vendor-proxy"
 )
 
-func VendorProxyTester(t *testing.T, factory func() vendor_proxy.Proxy) {
+func VendorProxyTester[T testing.T](
+	t testing.TRun[T],
+	factory func() vendor_proxy.Proxy,
+) {
 	errCustom := errors.New("error text")
-	t.Run("using reflect", func(t *testing.T) {
+	t.Run("using reflect", func(t T) {
 		instance := factory()
 		addFunction(t, nil, instance, "func1", func(arg int) int {
 			return arg * 2
@@ -54,7 +57,7 @@ func VendorProxyTester(t *testing.T, factory func() vendor_proxy.Proxy) {
 		})
 		equal(t, 1.1, callFunction(t, nil, instance, "func5"))
 	})
-	t.Run("using context", func(t *testing.T) {
+	t.Run("using context", func(t T) {
 		instance := factory()
 		addFunction(t, nil, instance, "func1", func(ctx vendor_proxy.Context, args ...any) (any, error) {
 			arg := args[0].(int)
@@ -91,20 +94,20 @@ func VendorProxyTester(t *testing.T, factory func() vendor_proxy.Proxy) {
 	})
 }
 
-func equal(t *testing.T, expected any, actual any) {
+func equal(t testing.T, expected any, actual any) {
 	if !reflect.DeepEqual(expected, actual) {
 		formatFatal(t, expected, actual)
 	}
 }
 
-func addFunction(t *testing.T, expectedErr error, instance vendor_proxy.Proxy, name string, function any) {
+func addFunction(t testing.T, expectedErr error, instance vendor_proxy.Proxy, name string, function any) {
 	actualErr := instance.AddFunction(name, function)
 	if !errors.Is(actualErr, expectedErr) {
 		formatFatal(t, expectedErr, actualErr)
 	}
 }
 
-func callFunction(t *testing.T, expectedErr error, instance vendor_proxy.Proxy, name string, args ...any) any {
+func callFunction(t testing.T, expectedErr error, instance vendor_proxy.Proxy, name string, args ...any) any {
 	result, actualErr := instance.CallFunction(name, args...)
 	if !errors.Is(actualErr, expectedErr) {
 		formatFatal(t, expectedErr, actualErr)
@@ -112,6 +115,7 @@ func callFunction(t *testing.T, expectedErr error, instance vendor_proxy.Proxy, 
 	return result
 }
 
-func formatFatal(t *testing.T, expected any, actual any) {
-	t.Fatalf("\nexpected: %+v\nactual: %+v", expected, actual)
+func formatFatal(t testing.T, expected any, actual any) {
+	t.Errorf("\nexpected: %+v\nactual: %+v", expected, actual)
+	t.FailNow()
 }

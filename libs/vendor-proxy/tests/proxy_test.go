@@ -24,7 +24,7 @@ import (
 )
 
 func TestVendorProxy(t *testing.T) {
-	VendorProxyTester(t, createInstance)
+	VendorProxyTester[*testing.T](t, createInstance)
 }
 
 func BenchmarkVendorProxy(b *testing.B) {

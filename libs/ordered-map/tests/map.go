@@ -17,14 +17,16 @@ limitations under the License.
 package tests
 
 import (
-	"testing"
-
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/internal/testing/require"
 	"github.com/componego/componego/libs/ordered-map"
 )
 
-func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]) {
-	t.Run("basic features", func(t *testing.T) {
+func MapTester[T testing.T](
+	t testing.TRun[T],
+	factory func(cap int) ordered_map.Map[int, float64],
+) {
+	t.Run("basic features", func(t T) {
 		m := factory(0)
 		_, ok := m.Get(0)
 		require.False(t, ok)
@@ -50,7 +52,7 @@ func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]
 		require.Equal(t, []int{1, 2}, m.Keys())
 		require.Equal(t, 0, factory(5).Len())
 	})
-	t.Run("prepend and append", func(t *testing.T) {
+	t.Run("prepend and append", func(t T) {
 		m := factory(0)
 		m.Set(0, 0)
 		m.Prepend(-1, -1)
@@ -59,7 +61,7 @@ func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]
 		m.Append(2, 2)
 		require.Equal(t, []float64{-2, -1, 0, 1, 2}, m.Values())
 	})
-	t.Run("add before and after keys", func(t *testing.T) {
+	t.Run("add before and after keys", func(t T) {
 		m := factory(0)
 		m.AddBefore(1, 1, 1)
 		m.AddAfter(7, 7, 7)
@@ -71,7 +73,7 @@ func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]
 		m.AddAfter(6, 6, 5)
 		require.Equal(t, []float64{0, 1, 2, 3, 4, 5, 6, 7}, m.Values())
 	})
-	t.Run("keys position", func(t *testing.T) {
+	t.Run("keys position", func(t T) {
 		m := factory(0)
 		_, ok := m.GetFirstKey()
 		require.False(t, ok)
@@ -97,7 +99,7 @@ func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]
 		require.True(t, ok)
 		require.Equal(t, 2, value)
 	})
-	t.Run("swap values", func(t *testing.T) {
+	t.Run("swap values", func(t T) {
 		m := factory(0)
 		m.Set(0, 0)
 		m.Set(1, 1)
@@ -112,7 +114,7 @@ func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]
 		require.Equal(t, []int{3, 2, 1, 0}, m.Keys())
 		require.Equal(t, []float64{3, 2, 1, 0}, m.Values())
 	})
-	t.Run("iterate", func(t *testing.T) {
+	t.Run("iterate", func(t T) {
 		m := factory(0)
 		m.Set(1, 1.1)
 		m.Set(2, 2.2)
@@ -142,7 +144,7 @@ func MapTester(t *testing.T, factory func(cap int) ordered_map.Map[int, float64]
 			return false
 		})
 	})
-	t.Run("convert to simple map", func(t *testing.T) {
+	t.Run("convert to simple map", func(t T) {
 		m := factory(0)
 		m.Set(1, 1.1)
 		m.Set(2, 2.2)

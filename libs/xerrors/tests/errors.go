@@ -19,12 +19,15 @@ package tests
 import (
 	"errors"
 	"strings"
-	"testing"
 
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/libs/xerrors"
 )
 
-func XErrorsTester(t *testing.T, factory func(message string, options ...xerrors.Option) xerrors.XError) {
+func XErrorsTester[T testing.T](
+	t testing.TRun[T],
+	factory func(message string, options ...xerrors.Option) xerrors.XError,
+) {
 	err1 := errors.New("error1")
 	err1x := factory("error1")
 	err2 := errors.New("error2")
@@ -37,7 +40,7 @@ func XErrorsTester(t *testing.T, factory func(message string, options ...xerrors
 	err1xS2 := err1x.WithError(err2)
 	err1S2S3 := errors.Join(err1S2, err3)
 	err1xS2S3x := err1xS2.WithError(err3x)
-	t.Run("comparison with the original error package", func(t *testing.T) {
+	t.Run("comparison with the original error package", func(t T) {
 		testCases := [...]struct {
 			a1 error
 			b1 error
@@ -58,11 +61,12 @@ func XErrorsTester(t *testing.T, factory func(message string, options ...xerrors
 		}
 		for i, testCase := range testCases {
 			if errors.Is(testCase.a1, testCase.b1) != errors.Is(testCase.a2, testCase.b2) {
-				t.Fatalf("#%d failed", i+1)
+				t.Errorf("#%d failed", i+1)
+				t.FailNow()
 			}
 		}
 	})
-	t.Run("comparison with the expected result", func(t *testing.T) {
+	t.Run("comparison with the expected result", func(t T) {
 		testCases := [...]struct {
 			a      error
 			b      error
@@ -86,11 +90,12 @@ func XErrorsTester(t *testing.T, factory func(message string, options ...xerrors
 		}
 		for i, testCase := range testCases {
 			if errors.Is(testCase.a, testCase.b) != testCase.result {
-				t.Fatalf("#%d failed", i+1)
+				t.Errorf("#%d failed", i+1)
+				t.FailNow()
 			}
 		}
 	})
-	t.Run("error text comparison", func(t *testing.T) {
+	t.Run("error text comparison", func(t T) {
 		testCases2 := [...]struct {
 			a error
 			b error
@@ -102,7 +107,8 @@ func XErrorsTester(t *testing.T, factory func(message string, options ...xerrors
 		}
 		for i, testCase := range testCases2 {
 			if strings.ReplaceAll(testCase.a.Error(), "\n", " -> ") != testCase.b.Error() {
-				t.Fatalf("#%d failed", i+1)
+				t.Errorf("#%d failed", i+1)
+				t.FailNow()
 			}
 		}
 	})

@@ -25,3 +25,8 @@ type T interface {
 type THelper interface {
 	Helper()
 }
+
+type TRun[I T] interface {
+	T
+	Run(name string, fn func(t I)) bool
+}

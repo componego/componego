@@ -24,7 +24,7 @@ import (
 )
 
 func TestDependencyContainer(t *testing.T) {
-	DependencyContainerTester(t, func() (container.Container, func([]componego.Dependency) error) {
+	DependencyContainerTester[*testing.T](t, func() (container.Container, func([]componego.Dependency) error) {
 		return container.New(5)
 	})
 }

@@ -23,5 +23,5 @@ import (
 )
 
 func TestDependencyManager(t *testing.T) {
-	DependencyManagerTester(t, dependency.NewManager)
+	DependencyManagerTester[*testing.T](t, dependency.NewManager)
 }

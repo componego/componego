@@ -23,5 +23,5 @@ import (
 )
 
 func TestXErrors(t *testing.T) {
-	XErrorsTester(t, xerrors.New)
+	XErrorsTester[*testing.T](t, xerrors.New)
 }
