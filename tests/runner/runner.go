@@ -21,16 +21,16 @@ import (
 	"io"
 	"runtime"
 	"sync"
-	"testing"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/application"
 	"github.com/componego/componego/impl/driver"
+	"github.com/componego/componego/internal/testing"
 )
 
 type stopAction = func(env componego.Environment, prevErr error) error
 
-func CreateTestEnvironment(t *testing.T, app componego.Application) (componego.Environment, func()) {
+func CreateTestEnvironment(t testing.T, app componego.Application) (componego.Environment, func()) {
 	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
 	t.Cleanup(cancelCtx)
 	env, err := driver.New(&driver.Options{
@@ -38,7 +38,9 @@ func CreateTestEnvironment(t *testing.T, app componego.Application) (componego.E
 		AppIO: application.NewIO(nil, io.Discard, io.Discard),
 	}).CreateEnvironment(cancelableCtx, app, componego.TestMode)
 	if err != nil {
-		t.Fatalf("error when creating an environment for the application: %s", err)
+		t.Errorf("error when creating an environment for the application: %s", err)
+		t.FailNow()
+		return nil, nil
 	}
 	components := env.Components()
 	onStopActions := make([]stopAction, 0, len(components)+1)
@@ -50,7 +52,8 @@ func CreateTestEnvironment(t *testing.T, app componego.Application) (componego.E
 				cancelCtx()
 				runtime.Gosched()
 				if err = driver.ErrorRecoveryOnStop(recover(), err); err != nil {
-					t.Fatalf("error when stopping the application: %s", err)
+					t.Errorf("error when stopping the application: %s", err)
+					t.FailNow()
 				}
 			}()
 			for _, action := range onStopActions {
@@ -67,7 +70,9 @@ func CreateTestEnvironment(t *testing.T, app componego.Application) (componego.E
 	for _, component := range components {
 		if component, ok := component.(componego.ComponentInit); ok {
 			if err = component.ComponentInit(env); err != nil {
-				t.Fatalf("error in component '%s': %s", component.ComponentIdentifier(), err)
+				t.Errorf("error in component '%s': %s", component.ComponentIdentifier(), err)
+				t.FailNow()
+				return nil, nil
 			}
 		}
 		if component, ok := component.(componego.ComponentStop); ok {

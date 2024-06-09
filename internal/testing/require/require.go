@@ -17,121 +17,159 @@ limitations under the License.
 package require
 
 import (
-	"testing"
+	"github.com/componego/componego/internal/testing"
 )
 
 // TODO: it is necessary to implement this using code generation.
 
 // Equal is a proxy function for require.Equal.
-func Equal(t *testing.T, expected any, actual any, msgAndArgs ...any) {
-	t.Helper()
+func Equal(t testing.T, expected any, actual any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Equal", t, expected, actual, msgAndArgs)
 }
 
 // Same is a proxy function for require.Same.
-func Same(t *testing.T, expected any, actual any, msgAndArgs ...any) {
-	t.Helper()
+func Same(t testing.T, expected any, actual any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Same", t, expected, actual, msgAndArgs)
 }
 
 // NotSame is a proxy function for require.NotSame.
-func NotSame(t *testing.T, expected any, actual any, msgAndArgs ...any) {
-	t.Helper()
+func NotSame(t testing.T, expected any, actual any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("NotSame", t, expected, actual, msgAndArgs)
 }
 
 // Implements is a proxy function for require.Implements.
-func Implements(t *testing.T, interfaceObject any, object any, msgAndArgs ...any) {
-	t.Helper()
+func Implements(t testing.T, interfaceObject any, object any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Implements", t, interfaceObject, object, msgAndArgs)
 }
 
 // IsType is a proxy function for require.IsType.
-func IsType(t *testing.T, expectedType any, object any, msgAndArgs ...any) {
-	t.Helper()
+func IsType(t testing.T, expectedType any, object any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("IsType", t, expectedType, object, msgAndArgs)
 }
 
 // ErrorIs is a proxy function for require.ErrorIs.
-func ErrorIs(t *testing.T, err error, target error, msgAndArgs ...any) {
-	t.Helper()
+func ErrorIs(t testing.T, err error, target error, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("ErrorIs", t, err, target, msgAndArgs)
 }
 
 // EqualError is a proxy function for require.EqualError.
-func EqualError(t *testing.T, theError error, errString string, msgAndArgs ...any) {
-	t.Helper()
+func EqualError(t testing.T, theError error, errString string, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("EqualError", t, theError, errString, msgAndArgs)
 }
 
 // Error is a proxy function for require.Error.
-func Error(t *testing.T, err error, msgAndArgs ...any) {
-	t.Helper()
+func Error(t testing.T, err error, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Error", t, err, msgAndArgs)
 }
 
 // NoError is a proxy function for require.NoError.
-func NoError(t *testing.T, err error, msgAndArgs ...any) {
-	t.Helper()
+func NoError(t testing.T, err error, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("NoError", t, err, msgAndArgs)
 }
 
 // True is a proxy function for require.True.
-func True(t *testing.T, value bool, msgAndArgs ...any) {
-	t.Helper()
+func True(t testing.T, value bool, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("True", t, value, msgAndArgs)
 }
 
 // False is a proxy function for require.False.
-func False(t *testing.T, value bool, msgAndArgs ...any) {
-	t.Helper()
+func False(t testing.T, value bool, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("False", t, value, msgAndArgs)
 }
 
-// Len is a proxy function for require.Len
-func Len(t *testing.T, object any, length int, msgAndArgs ...any) {
-	t.Helper()
+// Len is a proxy function for require.Len.
+func Len(t testing.T, object any, length int, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Len", t, object, length, msgAndArgs)
 }
 
 // Nil is a proxy function for require.Nil.
-func Nil(t *testing.T, object any, msgAndArgs ...any) {
-	t.Helper()
+func Nil(t testing.T, object any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Nil", t, object, msgAndArgs)
 }
 
 // NotNil is a proxy function for require.NotNil.
-func NotNil(t *testing.T, object any, msgAndArgs ...any) {
-	t.Helper()
+func NotNil(t testing.T, object any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("NotNil", t, object, msgAndArgs)
 }
 
 // Panics is a proxy function for require.Panics.
-func Panics(t *testing.T, fn func(), msgAndArgs ...any) {
-	t.Helper()
+func Panics(t testing.T, fn func(), msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Panics", t, fn, msgAndArgs)
 }
 
 // NotPanics is a proxy function for require.NotPanics.
-func NotPanics(t *testing.T, fn func(), msgAndArgs ...any) {
-	t.Helper()
+func NotPanics(t testing.T, fn func(), msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("NotPanics", t, fn, msgAndArgs)
 }
 
 // PanicsWithError is a proxy function for require.PanicsWithError.
-func PanicsWithError(t *testing.T, errString string, fn func(), msgAndArgs ...any) {
-	t.Helper()
+func PanicsWithError(t testing.T, errString string, fn func(), msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("PanicsWithError", t, errString, fn, msgAndArgs)
 }
 
 // FailNow is a proxy function for require.FailNow.
-func FailNow(t *testing.T, failureMessage string, msgAndArgs ...any) {
-	t.Helper()
+func FailNow(t testing.T, failureMessage string, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("FailNow", t, failureMessage, msgAndArgs)
 }
 
 // Regexp is a proxy function for require.Regexp.
-func Regexp(t *testing.T, regexp any, str any, msgAndArgs ...any) {
-	t.Helper()
+func Regexp(t testing.T, regexp any, str any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
 	call("Regexp", t, regexp, str, msgAndArgs)
 }

@@ -18,13 +18,15 @@ package require
 
 import (
 	"errors"
-	"testing"
 
+	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/libs/vendor-proxy"
 )
 
-func call(name string, t *testing.T, args ...any) {
-	t.Helper() // removes this function from the error stack.
+func call(name string, t testing.T, args ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper() // Removes this function from the error stack.
+	}
 	var err error
 	require := vendor_proxy.Get("testify/require")
 	if len(args) == 0 {
@@ -42,7 +44,8 @@ func call(name string, t *testing.T, args ...any) {
 	if errors.Is(err, vendor_proxy.ErrFunctionNotExists) {
 		message += messageOfIncorrectRun()
 	}
-	t.Fatal(message)
+	t.Errorf(message)
+	t.FailNow()
 }
 
 func messageOfIncorrectRun() string {
