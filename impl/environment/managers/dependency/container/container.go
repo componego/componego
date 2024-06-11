@@ -18,6 +18,7 @@ package container
 
 import (
 	"reflect"
+	"sort"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/internal/utils"
@@ -56,32 +57,36 @@ func New(approximateSize int) (Container, func([]componego.Dependency) error) {
 	return c, c.initialize
 }
 
-func (c *container) initialize(dependencies []componego.Dependency) (err error) {
+func (c *container) initialize(dependencies []componego.Dependency) error {
 	if len(dependencies) == 0 {
-		return err
+		return nil
 	}
 	// List of positions of nodes that have been replaced.
 	// As a result, we should not have nodes with these positions.
 	c.rewritePositions = map[int]struct{}{}
 	for i, item := range dependencies {
-		// we increase the index by the size of the previous count of nodes to avoid duplicates in the positions,
-		// and add a new node.
-		if err = c.addNode(i, item); err != nil {
+		// The index is the position of a node in the map of other nodes.
+		if err := c.addNode(i, item); err != nil {
 			return err
 		}
 	}
+	nodes := utils.Values(c.nodes)
+	// The order of calling functions is always the same.
+	sort.Slice(nodes, func(i, j int) bool {
+		return nodes[i].position < nodes[j].position
+	})
 	// Here we check that the dependency rewrite was correct.
-	if err = c.checkRewrites(); err != nil {
+	if err := c.checkRewrites(nodes); err != nil {
 		return err
 	}
 	c.rewritePositions = nil
 	// We initialize all values in one thread without multithreading to avoid race conditions and define cycles correctly.
-	for itemType, nodeObj := range c.nodes {
-		if err = c.initValue(nodeObj, itemType); err != nil {
+	for _, nodeObj := range nodes {
+		if err := c.initValue(nodeObj); err != nil {
 			return err
 		}
 	}
-	return err
+	return nil
 }
 
 func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
@@ -91,11 +96,11 @@ func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
 			xerrors.NewOption("componego:dependency:container:requestedType", itemType),
 		)
 	}
-	err := c.initValue(nodeObj, itemType)
-	return nodeObj.value, err
+	err := c.initValue(nodeObj)
+	return nodeObj.reflectValue, err
 }
 
-func (c *container) initValue(nodeObj *node, itemType reflect.Type) error {
+func (c *container) initValue(nodeObj *node) error {
 	// If the factory is missing, then the value has already been initialized.
 	if nodeObj.factory == nil {
 		return nil
@@ -105,11 +110,11 @@ func (c *container) initValue(nodeObj *node, itemType reflect.Type) error {
 		return ErrCyclicDependencies.WithOptions(
 			xerrors.NewOption("componego:dependency:container:cycle", c.getCyclicDependencies()),
 			xerrors.NewOption("componego:dependency:container:factory", factoryObj.value.Type()),
-			xerrors.NewOption("componego:dependency:container:requestedType", itemType),
+			xerrors.NewOption("componego:dependency:container:requestedType", nodeObj.reflectType),
 		)
 	}
 	factoryObj.lock = true
-	c.initStack = append(c.initStack, itemType)
+	c.initStack = append(c.initStack, nodeObj.reflectType)
 	defer func() {
 		// We always return to the previous state after the function completes.
 		factoryObj.lock = false
@@ -118,19 +123,19 @@ func (c *container) initValue(nodeObj *node, itemType reflect.Type) error {
 	}()
 	input := make([]reflect.Value, len(factoryObj.dependencies))
 	for i, dependencyType := range factoryObj.dependencies {
-		nodeObj = c.nodes[dependencyType]
+		dependencyNode := c.nodes[dependencyType]
 		// We check that dependency are present.
-		if nodeObj == nil {
+		if dependencyNode == nil {
 			return ErrUndeclaredDependency.WithOptions(
 				xerrors.NewOption("componego:dependency:container:factory", factoryObj.value.Type()),
 				xerrors.NewOption("componego:dependency:container:undeclaredType", dependencyType),
 			)
 		}
 		// We recursively initialize all the values that are needed to initialize the current value.
-		if err := c.initValue(nodeObj, dependencyType); err != nil {
+		if err := c.initValue(dependencyNode); err != nil {
 			return err
 		}
-		input[i] = nodeObj.value
+		input[i] = dependencyNode.reflectValue
 	}
 	output := factoryObj.value.Call(input)
 	outputLen := len(output)
@@ -140,14 +145,14 @@ func (c *container) initValue(nodeObj *node, itemType reflect.Type) error {
 			// noinspection ALL
 			return ErrGettingDependency.WithError(lastValue.(error),
 				xerrors.NewOption("componego:dependency:container:factory", factoryObj.value.Type()),
-				xerrors.NewOption("componego:dependency:container:requestedType", itemType),
+				xerrors.NewOption("componego:dependency:container:requestedType", nodeObj.reflectType),
 			)
 		}
 		outputLen--
 	}
 	for i := 0; i < outputLen; i++ {
 		nodeObj = c.nodes[factoryObj.types[i]]
-		nodeObj.value = output[i]
+		nodeObj.reflectValue = output[i]
 		// Here we mark the current value as initialized.
 		nodeObj.factory = nil
 	}
@@ -211,8 +216,9 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 			factoryObj.types[i] = outType
 			// Adds a new type that can be obtained using a factory.
 			c.nodes[outType] = &node{
-				factory:  factoryObj,
-				position: position,
+				reflectType: outType,
+				factory:     factoryObj,
+				position:    position,
 			}
 		}
 	case reflect.Pointer:
@@ -221,11 +227,12 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 				xerrors.NewOption("componego:dependency:container:providedType", itemType),
 			)
 		}
-		c.addRewriteToCheck(itemType) // TODO
+		c.addRewriteToCheck(itemType)
 		// There is no need for a factory here because the value is already ready.
 		c.nodes[itemType] = &node{
-			value:    reflect.ValueOf(item),
-			position: position,
+			reflectType:  itemType,
+			reflectValue: reflect.ValueOf(item),
+			position:     position,
 		}
 	default:
 		return ErrInvalidProvidedType.WithOptions(
@@ -245,17 +252,17 @@ func (c *container) addRewriteToCheck(itemType reflect.Type) int {
 	return -1
 }
 
-func (c *container) checkRewrites() error {
+func (c *container) checkRewrites(nodes []*node) error {
 	if len(c.rewritePositions) == 0 {
 		return nil
 	}
-	for _, nodeObj := range c.nodes {
+	for _, nodeObj := range nodes {
 		// Here we check that all dependencies that were replaced are removed.
 		if _, ok := c.rewritePositions[nodeObj.position]; !ok {
 			continue
 		} else if nodeObj.factory == nil {
 			return ErrIncorrectRewrite.WithOptions(
-				xerrors.NewOption("componego:dependency:container:providedType", nodeObj.value.Type()),
+				xerrors.NewOption("componego:dependency:container:providedType", nodeObj.reflectType),
 			)
 		}
 		return ErrIncorrectRewrite.WithOptions(
@@ -290,9 +297,10 @@ type factory struct {
 }
 
 type node struct {
-	value    reflect.Value
-	factory  *factory
-	position int
+	reflectType  reflect.Type
+	reflectValue reflect.Value
+	factory      *factory
+	position     int
 }
 
 func isAllowedFactoryReturnType(reflectType reflect.Type) bool {
