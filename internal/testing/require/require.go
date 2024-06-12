@@ -173,3 +173,11 @@ func Regexp(t testing.T, regexp any, str any, msgAndArgs ...any) {
 	}
 	call("Regexp", t, regexp, str, msgAndArgs)
 }
+
+// ElementsMatch is a proxy function for require.ElementsMatch.
+func ElementsMatch(t testing.T, listA any, listB any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
+	call("ElementsMatch", t, listA, listB, msgAndArgs)
+}
