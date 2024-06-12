@@ -82,7 +82,12 @@ func (d *driver) RunApplication(ctx context.Context, app componego.Application, 
 }
 
 // CreateEnvironment creates a new environment for the application.
-func (d *driver) CreateEnvironment(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (componego.Environment, error) {
+func (d *driver) CreateEnvironment(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (env componego.Environment, err error) {
+	defer func() {
+		// This function should not return panic.
+		// Errors of goroutines running inside the environment must be processed in the places where they are launched.
+		err = ErrorRecoveryOnStop(recover(), err)
+	}()
 	// One driver can run multiple applications. Therefore, we don't use managers directly.
 	// Each application will have its own instances of managers and environment.
 	// This way we guarantee that the values of the variables will not overlap.
@@ -90,16 +95,16 @@ func (d *driver) CreateEnvironment(ctx context.Context, app componego.Applicatio
 	componentProvider, componentsInitializer := d.options.ComponentProviderFactory()
 	dependencyInvoker, dependenciesInitializer := d.options.DependencyInvokerFactory()
 	// Pay attention to the order in which the functions are run.
-	env := d.options.EnvironmentFactory(
+	env = d.options.EnvironmentFactory(
 		ctx, app, d.options.AppIO, appMode, configProvider, componentProvider, dependencyInvoker,
 	)
-	if err := configInitializer(env); err != nil {
+	if err = configInitializer(env); err != nil {
 		return nil, err
 	}
-	if err := componentsInitializer(env); err != nil {
+	if err = componentsInitializer(env); err != nil {
 		return nil, err
 	}
-	if err := dependenciesInitializer(env); err != nil {
+	if err = dependenciesInitializer(env); err != nil {
 		return nil, err
 	}
 	return env, nil
