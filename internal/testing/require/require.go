@@ -181,3 +181,11 @@ func ElementsMatch(t testing.T, listA any, listB any, msgAndArgs ...any) {
 	}
 	call("ElementsMatch", t, listA, listB, msgAndArgs)
 }
+
+// InDelta is a proxy function for require.InDelta.
+func InDelta(t testing.T, expected any, actual any, delta float64, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
+	call("InDelta", t, expected, actual, delta, msgAndArgs)
+}
