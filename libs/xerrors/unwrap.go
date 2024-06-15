@@ -17,7 +17,7 @@ limitations under the License.
 package xerrors
 
 func UnwrapAll(err error) []error {
-	result := make([]error, 5)
+	result := make([]error, 0, 5)
 	errorStack := make([]error, 0, 5)
 	errorStack = append(errorStack, err)
 	for len(errorStack) > 0 {
@@ -28,10 +28,7 @@ func UnwrapAll(err error) []error {
 		case interface{ Unwrap() error }:
 			errorStack = append(errorStack, castedErr.Unwrap())
 		case interface{ Unwrap() []error }:
-			unwrapErrors := castedErr.Unwrap()
-			for i := len(unwrapErrors) - 1; i >= 0; i-- {
-				errorStack = append(errorStack, unwrapErrors[i])
-			}
+			errorStack = append(errorStack, castedErr.Unwrap()...)
 		}
 	}
 	return result
