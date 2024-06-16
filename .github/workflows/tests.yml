@@ -15,16 +15,20 @@ jobs:
     name: GoLang ${{ matrix.go-version }}, ${{ matrix.os-version }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Install GoLang
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
-      - uses: actions/setup-python@v5
+      - name: Install Python
+        uses: actions/setup-python@v5
         with:
           python-version: 3.10.14
-      - run: python ./scripts/make.py github:actions
-      - uses: codecov/codecov-action@v4.0.1
+      - name: Code quality check
+        run: python ./scripts/make.py github:actions
+      - name: Upload coverage to Codecov
+        if: ${{ hashFiles('coverage.out') != '' }}
+        uses: codecov/codecov-action@v4.0.1
         with:
-          if: ${{ hashFiles('coverage.out') != '' }}
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           file: ./coverage.out
