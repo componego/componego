@@ -22,3 +22,11 @@ jobs:
         with:
           python-version: 3.10.14
       - run: python ./scripts/make.py github:actions
+      - uses: codecov/codecov-action@v4.0.1
+        with:
+          if: ${{ hashFiles('coverage.out') != '' }}
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          file: ./coverage.out
+          name: codecov-componego
+          verbose: true

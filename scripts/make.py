@@ -29,14 +29,14 @@ if version_info < (3, 10):
 from os import path, environ, makedirs, symlink, sep as path_separator, fdopen, close, pipe
 from tempfile import TemporaryDirectory
 from subprocess import run as runprocess, SubprocessError
-from glob import iglob
-from shutil import copy
+from glob import iglob, glob
+from shutil import copy, move as rename
 from typing import TypeAlias, Final, Callable, IO, Any
 from threading import Thread
 from atexit import register as on_exit
 from uuid import uuid4
 from hashlib import sha1
-from urllib import request
+from re import search as re_search
 
 # pylint: enable=wrong-import-position
 
@@ -47,6 +47,20 @@ GOSEC_VERSION: Final[str] = 'latest'
 GOLANGCI_LINT_VERSION: Final[str] = 'latest'
 
 LICENSE_HASH: Final[str] = 'f109dd29cfbafffd1d23caf22662462bb06a4a9d'
+
+TEST_COVERAGE_LIMIT: Final[float] = 70
+# noinspection SpellCheckingInspection
+TEST_COVERAGE_IGNORE: Final[tuple] = (
+    # all examples.
+    'examples/**',
+    # all test packages except the root package.
+    'impl/**/tests/**',
+    'internal/**/tests/**',
+    'libs/**/tests/**',
+    'qcomponents/**/tests/**',
+    'tools/**/tests/**',
+)
+TEST_COVERAGE_FILE: Final[str] = 'coverage.out'
 
 __all__ = []
 
@@ -133,7 +147,7 @@ class Go:
         root = environ.get(key, None)
         if root is None:
             info = runprocess(f'go env {key}', capture_output=True, text=True, shell=True, check=True)
-            root = info.stdout.strip()
+            root = str(info.stdout).strip()
             environ[key] = root
         if len(root) == 0:
             raise ValueError(f'missing {key} environment variable')
@@ -249,6 +263,39 @@ def is_ci_cd_pipeline() -> bool:
     return False
 
 
+def get_package_name(cwd: str = None) -> str:
+    cwd = basedir() if cwd is None else cwd
+    with open(path.join(cwd, 'go.mod'), 'r', encoding='utf-8') as file:
+        line = file.readline().strip()
+        return line.removeprefix('module ').strip()
+
+
+def ignore_coverage(profile: str, package_dir: str) -> None:
+    package_name = get_package_name(package_dir)
+    ignore = []
+    for ignore_pattern in TEST_COVERAGE_IGNORE:
+        ignore.extend(glob(ignore_pattern, root_dir=package_dir, recursive=True))
+    tmp_profile = path.join(path.dirname(profile), f'tmp_{path.basename(profile)}')
+    with open(profile, 'r', encoding='utf-8') as reader, open(tmp_profile, 'w', encoding='utf-8') as writer:
+        for line in reader:
+            try:
+                filename = line[0:line.find(':')].removeprefix(package_name + '/')
+            except ValueError as e:
+                raise ValueError('unexpected value in file') from e
+            if filename not in ignore:
+                writer.write(line)
+    rename(tmp_profile, profile)
+
+
+def upload_coverage(profile: str) -> None:
+    is_master_branch = environ.get('GITHUB_REF_NAME') == 'master' and environ.get('GITHUB_REF_TYPE') == 'branch'
+    # noinspection SpellCheckingInspection
+    is_original_repo = environ.get('GITHUB_REPOSITORY') == 'componego/componego'
+    if is_ci_cd_pipeline() and is_master_branch and is_original_repo:
+        # This file will be processed in the next step of GitHub actions.
+        copy(profile, path.join(basedir(), TEST_COVERAGE_FILE))
+
+
 @Command
 def fmt(args: Args) -> None:
     args = Command.args(args, './...')
@@ -257,24 +304,41 @@ def fmt(args: Args) -> None:
 
 @Command
 def tests(args: Args) -> None:
-    try:
-        # TODO: remove this check in the future when all repositories are available.
-        if is_ci_cd_pipeline():
-            with request.urlopen('https://github.com/componego/meta-package') as response:
-                if response.getcode() != 200:
-                    raise OSError('response status is not equal to 200')
-    except OSError as e:
-        print(f'AN ERROR OCCURRED WHILE RETRIEVING META PACKAGE INFORMATION. TESTING WAS NOT STARTED: {e}')
-        return
     args = Command.args(args, '-race -v -count=1 ./...')
     with TestEnvironment() as (tempdir, env_id):
         run_tests('go test', args=args, src_dir=basedir(), dst_dir=tempdir, env_id=env_id)
 
 
 @Command
-def tests_cover(_: Args) -> None:
+def tests_cover(args: Args) -> None:
+    percentage = 0
     # noinspection SpellCheckingInspection
-    tests('-race -v -count=1 -cover ./...')
+    args = Command.args(args, f'-race -v -count=1 -coverpkg=./... -coverprofile={TEST_COVERAGE_FILE} ./...')
+    with TestEnvironment() as (tempdir, env_id):
+        run_tests('go test', args=args, src_dir=basedir(), dst_dir=tempdir, env_id=env_id)
+        # The file may not exist depending on the function arguments.
+        if not path.exists(path.join(tempdir, TEST_COVERAGE_FILE)):
+            return
+        # Some files are ignored when checking test coverage.
+        # For example, we ignore the folder with examples, testers and mocks, which are used to run tests.
+        # See the function implementation for details.
+        ignore_coverage(path.join(tempdir, TEST_COVERAGE_FILE), tempdir)
+        upload_coverage(path.join(tempdir, TEST_COVERAGE_FILE))
+        output = path.join(tempdir, 'tool.out')
+        command = f'go tool cover -func={TEST_COVERAGE_FILE} > {output} 2>&1'
+        run_tests(command, args=None, src_dir=basedir(), dst_dir=tempdir, env_id=env_id)
+        with open(output, 'r', encoding='utf-8') as reader:
+            for line in reader:
+                print(line, end='')
+                if not line.startswith('total:'):
+                    continue
+                match = re_search(r'(\d+\.\d+)%', line)
+                if match:
+                    percentage = float(match.group(1))
+                else:
+                    raise ValueError('no percentage found in the input string')
+    if percentage < TEST_COVERAGE_LIMIT:
+        raise ValueError(f'test coverage less than {TEST_COVERAGE_LIMIT}%')
 
 
 @Command
@@ -382,6 +446,7 @@ def github_actions(_: Args) -> None:
     security(no_args)
     lint(no_args)
     license_check(no_args)
+    tests_cover(no_args)
 
 
 @Command
