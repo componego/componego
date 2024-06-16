@@ -236,7 +236,6 @@ def run_tests(cmd: str, args: Args | None, src_dir: str, dst_dir: str, env_id: s
         reader.close()
 
     env = environ | {
-        'GOPATH': f'{environ["GOPATH"]}:{dst_dir}' if 'GOPATH' in environ else dst_dir,
         'CGO_ENABLED': '1',  # for -race flag
     }
     try:
