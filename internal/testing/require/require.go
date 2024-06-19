@@ -30,6 +30,14 @@ func Equal(t testing.T, expected any, actual any, msgAndArgs ...any) {
 	call("Equal", t, expected, actual, msgAndArgs)
 }
 
+// Contains is a proxy function for require.Contains.
+func Contains(t testing.T, data any, contains any, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
+	call("Contains", t, data, contains, msgAndArgs)
+}
+
 // Same is a proxy function for require.Same.
 func Same(t testing.T, expected any, actual any, msgAndArgs ...any) {
 	if h, ok := t.(testing.THelper); ok {
