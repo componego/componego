@@ -18,7 +18,6 @@ package utils
 
 import (
 	"reflect"
-	"strings"
 )
 
 var errorType = reflect.TypeOf((*error)(nil)).Elem()
@@ -57,8 +56,4 @@ func IsEmpty(instance any) bool {
 		return IsEmpty(reflectValue.Elem().Interface())
 	}
 	return reflect.DeepEqual(instance, reflect.Zero(reflectValue.Type()).Interface())
-}
-
-func GetTypeName(reflectType reflect.Type) string {
-	return strings.ReplaceAll(reflectType.String(), "interface {}", "any")
 }

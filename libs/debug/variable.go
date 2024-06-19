@@ -79,17 +79,17 @@ func (r *renderer) process(instance any, depth int) {
 		return
 	}
 	if instance, ok := instance.(reflect.Type); ok {
-		utils.Fprint(r.writer, utils.GetTypeName(instance))
+		utils.Fprint(r.writer, getTypeName(instance))
 		return
 	}
 	if instance, ok := instance.(reflect.Value); ok {
-		utils.Fprint(r.writer, utils.GetTypeName(instance.Type()))
+		utils.Fprint(r.writer, getTypeName(instance.Type()))
 		return
 	}
 	if reflectValue.Kind() == reflect.Pointer {
 		pointer := reflectValue.UnsafePointer()
 		if _, ok := r.ptrSeen[pointer]; ok {
-			utils.Fprintf(r.writer, "%s{[... encountered a cycle]}", utils.GetTypeName(reflectType))
+			utils.Fprintf(r.writer, "%s{[... encountered a cycle]}", getTypeName(reflectType))
 			return
 		}
 		r.ptrSeen[pointer] = struct{}{}
@@ -104,7 +104,7 @@ func (r *renderer) process(instance any, depth int) {
 
 func (r *renderer) processByType(reflectType reflect.Type, reflectValue reflect.Value, depth int) {
 	if depth == 0 && reflectValue.Kind() != reflect.Func {
-		utils.Fprint(r.writer, utils.GetTypeName(reflectType))
+		utils.Fprint(r.writer, getTypeName(reflectType))
 	}
 	switch reflectValue.Kind() {
 	case reflect.Bool:
@@ -137,14 +137,14 @@ func (r *renderer) processByType(reflectType reflect.Type, reflectValue reflect.
 		r.structType(reflectValue, depth)
 	default:
 		if depth > 0 {
-			utils.Fprint(r.writer, utils.GetTypeName(reflectType))
+			utils.Fprint(r.writer, getTypeName(reflectType))
 		}
 		utils.Fprint(r.writer, "{[... is not supported type]}")
 	}
 }
 
 func (r *renderer) readDepthExceeded(reflectType reflect.Type) {
-	utils.Fprintf(r.writer, "%s{[... read depth exceeded]}", utils.GetTypeName(reflectType))
+	utils.Fprintf(r.writer, "%s{[... read depth exceeded]}", getTypeName(reflectType))
 }
 
 func (r *renderer) tabs(count int) {
@@ -167,7 +167,7 @@ func (r *renderer) simpleType(reflectValue reflect.Value, depth int) {
 }
 
 func (r *renderer) funcType(reflectValue reflect.Value) {
-	declaration := utils.GetTypeName(reflectValue.Type())
+	declaration := getTypeName(reflectValue.Type())
 	funcForPC := runtime.FuncForPC(reflectValue.Pointer())
 	if funcForPC != nil {
 		declaration = strings.Replace(declaration, "func", "func "+funcForPC.Name(), 1)
@@ -298,4 +298,8 @@ func isExportedName(name string) bool {
 		return unicode.IsUpper(r)
 	}
 	return false
+}
+
+func getTypeName(reflectType reflect.Type) string {
+	return strings.ReplaceAll(reflectType.String(), "interface {}", "any")
 }
