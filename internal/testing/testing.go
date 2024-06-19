@@ -23,6 +23,7 @@ type T interface {
 }
 
 type THelper interface {
+	T
 	Helper()
 }
 

@@ -51,7 +51,7 @@ func call(name string, t testing.T, args ...any) {
 func messageOfIncorrectRun() string {
 	// noinspection SpellCheckingInspection
 	return `
-Make sure you run tests using 'make test' or 'make test-cover'.
+Make sure you run tests using 'make tests' or 'make tests-cover'.
 However, if you are running tests in your application, then you need to add a new imports:
 <code>
     import (
