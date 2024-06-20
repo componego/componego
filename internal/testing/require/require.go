@@ -78,12 +78,28 @@ func ErrorIs(t testing.T, err error, target error, msgAndArgs ...any) {
 	call("ErrorIs", t, err, target, msgAndArgs)
 }
 
-// EqualError is a proxy function for require.EqualError.
-func EqualError(t testing.T, theError error, errString string, msgAndArgs ...any) {
+// NotErrorIs is a proxy function for require.NotErrorIs.
+func NotErrorIs(t testing.T, err error, target error, msgAndArgs ...any) {
 	if h, ok := t.(testing.THelper); ok {
 		h.Helper()
 	}
-	call("EqualError", t, theError, errString, msgAndArgs)
+	call("NotErrorIs", t, err, target, msgAndArgs)
+}
+
+// ErrorContains is a proxy function for require.ErrorContains.
+func ErrorContains(t testing.T, err error, contains string, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
+	call("ErrorContains", t, err, contains, msgAndArgs)
+}
+
+// EqualError is a proxy function for require.EqualError.
+func EqualError(t testing.T, err error, errString string, msgAndArgs ...any) {
+	if h, ok := t.(testing.THelper); ok {
+		h.Helper()
+	}
+	call("EqualError", t, err, errString, msgAndArgs)
 }
 
 // Error is a proxy function for require.Error.

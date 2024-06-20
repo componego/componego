@@ -18,6 +18,8 @@ package types
 
 // These are the internal types that are needed to test the framework.
 
+type CustomString string
+
 type AInterface interface {
 	Method()
 }

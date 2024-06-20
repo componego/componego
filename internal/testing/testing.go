@@ -27,6 +27,11 @@ type THelper interface {
 	Helper()
 }
 
+type TParallel interface {
+	T
+	Parallel()
+}
+
 type TRun[I T] interface {
 	T
 	Run(name string, fn func(t I)) bool
