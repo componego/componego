@@ -17,6 +17,9 @@
 set -o errexit
 set -o nounset
 
+PACKAGE_NAME="github.com/componego/componego"
+PROJECT_NAME="componego-basic-app"
+
 if ! command -v "go" >/dev/null; then
     echo "ERROR: please install GoLang and try again."
     exit 1
@@ -26,6 +29,13 @@ if [ ! -p /dev/stdin ] && command -v "realpath" >/dev/null; then
     cd "$(dirname "$(realpath -- "$0")")"
 fi
 
+create=false
+for arg in "$@"; do
+    if [ "$arg" = "--create" ]; then
+        create=true
+    fi
+done
+
 directory=$(pwd)
 while [ "$directory" != "/" ]; do
     if [ -e "$directory/go.mod" ]; then
@@ -34,19 +44,69 @@ while [ "$directory" != "/" ]; do
     fi
     directory=$(dirname "$directory")
 done
+directory=$(pwd)
 
-project_name="componego-basic-app"
-
-if [ -e "${project_name}" ]; then
-    echo "ERROR: could not create the required files for the project because the directory or file already exists: $(pwd)}/${project_name}"
+if [ -e "${PROJECT_NAME}" ]; then
+    echo "ERROR: could not create the required files for the project because the directory or file already exists: $(pwd)}/${PROJECT_NAME}"
     exit 1
 fi
 
-mkdir -p "${project_name}"
-cd "${project_name}"
+if [ "$create" = false ]; then
+    temp_dir=$(mktemp -d)
+    cd "${temp_dir}"
+
+    cat >"temp_app.go" <<EOF
+package main
+
+import (
+    "github.com/componego/componego"
+)
+
+func main() {
+    _ = componego.ProductionMode
+}
+EOF
+    go mod init github.com/YOUR-USER-OR-ORG-NAME/YOUR-REPO-NAME
+    go mod tidy
+    go mod verify
+
+    go_path=$(go env GOPATH)
+    version=$(go list -m -f '{{.Version}}' "${PACKAGE_NAME}")
+
+    temp_dir=$(mktemp -d)
+    cd "${temp_dir}"
+
+    cp "${go_path}/pkg/mod/${PACKAGE_NAME}@${version}/tools/create-basic-app.sh" "${temp_dir}/create-basic-app.sh"
+
+    if [ "$version" = "v0.0.1" ]; then
+        head -n210 "${temp_dir}/create-basic-app.sh" > "${temp_dir}/create-basic-app-temp.sh"
+        cp -f "${temp_dir}/create-basic-app-temp.sh" "${temp_dir}/create-basic-app.sh"
+    fi
+
+    sh create-basic-app.sh --create
+
+    cd "${PROJECT_NAME}"
+
+    go mod init github.com/YOUR-USER-OR-ORG-NAME/YOUR-REPO-NAME
+    go get "${PACKAGE_NAME}@${version}"
+    go mod tidy
+    go mod verify
+
+    go fmt ./...
+
+    # CGO_ENABLED=1 go test -race -v -count=1 ./...
+    go test -v -count=1 ./... # without -race because CGO may not be installed.
+
+    cp -r "${temp_dir}/${PROJECT_NAME}" "${directory}/${PROJECT_NAME}"
+    echo "The project has been created. Output directory -> ${directory}/${PROJECT_NAME}"
+    exit "$?"
+fi
+
+mkdir -p "${PROJECT_NAME}"
+cd "${PROJECT_NAME}"
 
 mkdir -p "cmd/application"
-cat > cmd/application/main.go << EOF
+cat >cmd/application/main.go <<EOF
 package main
 
 import (
@@ -63,7 +123,7 @@ func main() {
 EOF
 
 mkdir -p "cmd/application/dev"
-cat > cmd/application/dev/main.go << EOF
+cat >cmd/application/dev/main.go <<EOF
 package main
 
 import (
@@ -82,7 +142,7 @@ func main() {
 EOF
 
 mkdir -p "internal/application"
-cat > internal/application/application.go << EOF
+cat >internal/application/application.go <<EOF
 package application
 
 import (
@@ -151,7 +211,7 @@ var (
 EOF
 
 mkdir -p "tests"
-cat > tests/basic_test.go << EOF
+cat >tests/basic_test.go <<EOF
 package tests
 
 import (
@@ -173,7 +233,7 @@ func TestBasic(t *testing.T) {
 EOF
 
 mkdir -p "tests/mocks"
-cat > tests/mocks/application.go << EOF
+cat >tests/mocks/application.go <<EOF
 package mocks
 
 import (
@@ -194,7 +254,7 @@ func NewApplicationMock() *ApplicationMock {
 // ... your other methods
 EOF
 
-cat > README.md << EOF
+cat >README.md <<EOF
 # Hello
 
 Thank you for creating a basic version of the project based on our framework.
@@ -207,14 +267,3 @@ To build the application in developer mode, use the following file: [cmd/applica
 
 There is another file for production mode: [cmd/application/main.go](./cmd/application/main.go)
 EOF
-
-go mod init github.com/YOUR-USER-OR-ORG-NAME/YOUR-REPO-NAME
-go mod tidy
-go mod verify
-
-go fmt ./...
-
-# CGO_ENABLED=1 go test -race -v -count=1 ./...
-go test -v -count=1 ./... # without -race because CGO may not be installed.
-
-echo "The project has been created. Output directory -> $(pwd)"
