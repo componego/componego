@@ -193,6 +193,8 @@ class Command:
         self._register(function.__name__, self)
 
     def __call__(self, *args, **kwargs) -> None:
+        name = self._function.__name__.replace('_', ':')
+        print(f'> RUN > {name}')
         self._function(*args, **kwargs)
 
     @staticmethod
@@ -371,6 +373,14 @@ def tests_env(_: Args) -> None:
 
 
 @Command
+def test_skeleton(_: Args) -> None:
+    # noinspection SpellCheckingInspection
+    with TemporaryDirectory(prefix='componego_') as tempdir:
+        copy(path.join(basedir(), 'tools', 'create-basic-app.sh'), path.join(tempdir, 'create-basic-app.sh'))
+        run_process('sh create-basic-app.sh', cwd=tempdir)
+
+
+@Command
 def lint(args: Args) -> None:
     args = Command.args(args, 'run ./...')
     # noinspection SpellCheckingInspection
@@ -442,6 +452,7 @@ def github_actions(_: Args) -> None:
         run_process('git --no-pager diff', cwd=basedir())
         raise e
     tests(no_args)
+    test_skeleton(no_args)
     security(no_args)
     lint(no_args)
     license_check(no_args)
