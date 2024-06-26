@@ -48,7 +48,7 @@ GOLANGCI_LINT_VERSION: Final[str] = 'latest'
 
 LICENSE_HASH: Final[str] = 'f109dd29cfbafffd1d23caf22662462bb06a4a9d'
 
-TEST_COVERAGE_LIMIT: Final[float] = 70
+TEST_COVERAGE_LIMIT: Final[float] = 80
 # noinspection SpellCheckingInspection
 TEST_COVERAGE_IGNORE: Final[tuple] = (
     # all examples.
