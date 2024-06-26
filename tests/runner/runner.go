@@ -54,7 +54,6 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 		mutexOnce.Do(func() {
 			defer func() {
 				cancelCtx()
-				runtime.Gosched()
 				if err = driver.ErrorRecoveryOnStop(recover(), err); err != nil {
 					t.Errorf("error when stopping the application: %s", err)
 					t.FailNow()
@@ -63,11 +62,11 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 			for _, action := range onStopActions {
 				// noinspection ALL
 				defer func(action stopAction) {
+					runtime.Gosched()
 					err = driver.ErrorRecoveryOnStop(recover(), err)
 					err = action(env, err)
 				}(action)
 			}
-			runtime.Gosched()
 		})
 	}
 	t.Cleanup(cancelEnv)

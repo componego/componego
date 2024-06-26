@@ -123,6 +123,7 @@ func (d *driver) runInsideEnvironment(env componego.Environment) (exitCode int, 
 			// Stopping a component is guaranteed to occur in the reverse order of component initialization.
 			// noinspection ALL
 			defer func(component componego.ComponentStop) {
+				runtime.Gosched()                         // We switch the runtime so that the waiting goroutines can stop their work.
 				err = ErrorRecoveryOnStop(recover(), err) // We catch the panic that may occur.
 				err = component.ComponentStop(env, err)   // It can handle this error somehow or/and return it to work.
 			}(component) // We support compatibility with older versions of the language.
