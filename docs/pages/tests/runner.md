@@ -15,13 +15,15 @@ The simplest way is this:
     )
 
     func TestExample(t *testing.T) {
-        env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock())
+        env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock(), nil)
         t.Cleanup(cancelEnv)
         // ... here you can use application environment.
     }
     ```
 In this example, we created a new [environment](../impl/environment.md) based on the [application mock](./mock.md).
 You can use this environment to run the necessary functions in your tests.
+
+The last argument of the function accepts the [driver options](../impl/runner.md#specific-driver-options) that will be applied to the current test.
 
 When the environment is canceled, all necessary functions will be called to stop the application.
 

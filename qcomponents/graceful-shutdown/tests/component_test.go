@@ -33,7 +33,7 @@ func TestGracefulShutdownComponent(t *testing.T) {
 				graceful_shutdown.NewComponent(),
 			}, nil
 		})
-		_, envCancel := runner.CreateTestEnvironment(t, appFactory.Build())
+		_, envCancel := runner.CreateTestEnvironment(t, appFactory.Build(), nil)
 		envCancel()
 	})
 }

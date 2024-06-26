@@ -10,7 +10,7 @@ import (
 )
 
 func TestComponent(t *testing.T) {
-	env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock())
+	env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock(), nil)
 	t.Cleanup(cancelEnv)
 	t.Run("basic", func(t *testing.T) {
 		t.Parallel()

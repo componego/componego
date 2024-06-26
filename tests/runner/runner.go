@@ -30,13 +30,17 @@ import (
 
 type stopAction = func(env componego.Environment, prevErr error) error
 
-func CreateTestEnvironment(t testing.T, app componego.Application) (componego.Environment, func()) {
+func CreateTestEnvironment(t testing.T, app componego.Application, options *driver.Options) (componego.Environment, func()) {
+	if options == nil {
+		options = &driver.Options{}
+	}
+	if options.AppIO == nil {
+		// Ignore output. We don't need output during the test.
+		options.AppIO = application.NewIO(nil, io.Discard, io.Discard)
+	}
 	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
 	t.Cleanup(cancelCtx)
-	env, err := driver.New(&driver.Options{
-		// Ignore output. We don't need output during the test.
-		AppIO: application.NewIO(nil, io.Discard, io.Discard),
-	}).CreateEnvironment(cancelableCtx, app, componego.TestMode)
+	env, err := driver.New(options).CreateEnvironment(cancelableCtx, app, componego.TestMode)
 	if err != nil {
 		t.Errorf("error when creating an environment for the application: %s", err)
 		t.FailNow()

@@ -42,7 +42,7 @@ func TestGetDependencyWithAndWithoutPanic(t *testing.T) {
 			},
 		}, nil
 	})
-	env, cancelEnv := runner.CreateTestEnvironment(t, appFactory.Build())
+	env, cancelEnv := runner.CreateTestEnvironment(t, appFactory.Build(), nil)
 	t.Cleanup(cancelEnv)
 
 	t.Run("get valid dependency type", func(t *testing.T) {
@@ -83,7 +83,7 @@ func TestInvokeFunctionWithAndWithoutPanic(t *testing.T) {
 			origValue,
 		}, nil
 	})
-	env, cancelEnv := runner.CreateTestEnvironment(t, appFactory.Build())
+	env, cancelEnv := runner.CreateTestEnvironment(t, appFactory.Build(), nil)
 	t.Cleanup(cancelEnv)
 
 	t.Run("invoke the function with dependency", func(t *testing.T) {

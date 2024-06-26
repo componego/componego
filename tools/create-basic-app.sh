@@ -224,7 +224,7 @@ import (
 
 func TestBasic(t *testing.T) {
     // Documentation -> https://componego.github.io/tests/runner/
-    env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock())
+    env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock(), nil)
     t.Cleanup(cancelEnv)
 
     // TODO: implement tests.

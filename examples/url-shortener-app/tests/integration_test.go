@@ -18,7 +18,7 @@ import (
 func TestIntegration(t *testing.T) {
 	// We run tests inside mock of the current application example.
 	// You can replace parts of the application specifically for the test in this application mock.
-	env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock())
+	env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock(), nil)
 	t.Cleanup(cancelEnv)
 	t.Run("create urls", func(t *testing.T) {
 		t.Parallel() // Parallel running of tests is supported.
