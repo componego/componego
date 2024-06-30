@@ -179,7 +179,7 @@ func (a *Application) ApplicationDependencies() ([]componego.Dependency, error) 
 }
 
 // ApplicationConfigInit belongs to interface componego.ApplicationConfigInit.
-func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode) (map[string]any, error) {
+func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode, options any) (map[string]any, error) {
     // Documentation -> https://componego.github.io/impl/application/#applicationconfiginit
     return nil, nil
 }
@@ -191,7 +191,7 @@ func (a *Application) ApplicationErrorHandler(err error, appIO componego.Applica
 }
 
 // ApplicationAction belongs to interface componego.Application.
-func (a *Application) ApplicationAction(env componego.Environment, args []string) (int, error) {
+func (a *Application) ApplicationAction(env componego.Environment, options any) (int, error) {
     // Documentation -> https://componego.github.io/impl/application/#applicationaction
     // In this function you can write business logic for your application.
 

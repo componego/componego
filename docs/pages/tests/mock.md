@@ -97,7 +97,7 @@ For example, you can use [application mode](../impl/runner.md#application-mode) 
 
     // ...
 
-    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode) (map[string]any, error) {
+    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode, options any) (map[string]any, error) {
         switch appMode {
         case componego.ProductionMode:
             return config_reader.Read("./config/production.config.json")

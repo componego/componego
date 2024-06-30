@@ -35,7 +35,7 @@ func (a *ApplicationMock) ApplicationDependencies() ([]componego.Dependency, err
 }
 
 // ApplicationConfigInit belongs to interface componego.ApplicationConfigInit.
-func (a *ApplicationMock) ApplicationConfigInit(_ componego.ApplicationMode) (map[string]any, error) {
+func (a *ApplicationMock) ApplicationConfigInit(_ componego.ApplicationMode, _ any) (map[string]any, error) {
 	return map[string]any{
 		"databases.main-storage.driver": "db-driver-mock",
 		"databases.main-storage.source": "...",

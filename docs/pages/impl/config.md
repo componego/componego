@@ -18,7 +18,7 @@ This is a special method that you can add to the [application](./application.md#
 
     // ...
 
-    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode) (map[string]any, error) {
+    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode, options any) (map[string]any, error) {
         return map[string]any{
             "config.key1": "config.value1",
             "config.key2": "config.value2",
@@ -62,7 +62,7 @@ However, your function or library must return a variable of type ^^map[string]an
 
     // ...
 
-    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode) (map[string]any, error) {
+    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode, options any) (map[string]any, error) {
         switch appMode {
         case componego.ProductionMode:
             return ConfigReader("./config/production.config.json")

@@ -23,7 +23,7 @@ Let's try to create your first application and launch it.
         return "Hello World App"
     }
 
-    func (a *Application) ApplicationAction(env componego.Environment, args []string) (int, error) {
+    func (a *Application) ApplicationAction(env componego.Environment, options any) (int, error) {
         _, err := fmt.Fprintln(env.ApplicationIO().OutputWriter(), "Hello World!")
         return application.ExitWrapper(err)
     }
@@ -61,7 +61,7 @@ The function returns the application name.
 
 The function describes the main action of the current application.
     ```go
-    func (a *Application) ApplicationAction(env componego.Environment, args []string) (int, error) {
+    func (a *Application) ApplicationAction(env componego.Environment, options any) (int, error) {
         // ...
         return componego.SuccessExitCode, nil
     }
@@ -69,6 +69,10 @@ The function describes the main action of the current application.
     // ...
     ```
 In this function you can write business logic for your application.
+
+The first argument of this method is an [environment](./environment.md), with which you can access any function of the framework.
+
+The second argument is [additional options](./runner.md#specific-driver-options) that you can pass to your application using the driver.
 
 ## Optional methods
 
@@ -98,7 +102,7 @@ It can provide [dependencies](./dependency.md):
 
 The application can read the [configuration](./config.md):
     ```go
-    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode) (map[string]any, error) {
+    func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode, options any) (map[string]any, error) {
         return map[string]any{
             "config.key": "config.value",
         }, nil
@@ -107,6 +111,9 @@ The application can read the [configuration](./config.md):
     // ...
     ```
 You can return different configuration depending on the [mode](./runner.md#application-mode) the application is running in.
+
+The second argument of method is [additional options](./runner.md#specific-driver-options).
+These are the same options as in the [application action](./application.md#applicationaction).
 
 ### ApplicationErrorHandler
 
@@ -170,6 +177,10 @@ However, we do not recommend using this method of creating an application.
         factory := application.NewFactory("Application Name")
         factory.SetApplicationDependencies(func() ([]componego.Dependency, error) {
             return []componego.Dependency{ /* ... */ }, nil
+        })
+        factory.SetApplicationAction(func(env componego.Environment, options any) (int, error) {
+            // ...
+            return componego.SuccessExitCode, nil
         })
         // ... other methods.
         runner.RunAndExit(factory.Build(), componego.ProductionMode)

@@ -49,7 +49,7 @@ type Application interface {
 	ApplicationName() string
 	// ApplicationAction describes the main action of the current application.
 	// This function is called last when the application is fully initialized
-	ApplicationAction(env Environment, args []string) (int, error)
+	ApplicationAction(env Environment, options any) (int, error)
 }
 
 // ApplicationComponents is an interface that describes the components of the application.
@@ -76,7 +76,7 @@ type ApplicationConfigInit interface {
 	Application
 	// ApplicationConfigInit returns configuration for all application entities.
 	// This function is called only once.
-	ApplicationConfigInit(appMode ApplicationMode) (map[string]any, error)
+	ApplicationConfigInit(appMode ApplicationMode, options any) (map[string]any, error)
 }
 
 // ApplicationErrorHandler is an interface that describes a function that catches all application errors.

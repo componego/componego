@@ -49,7 +49,7 @@ func (a *Application) ApplicationDependencies() ([]componego.Dependency, error) 
 }
 
 // ApplicationConfigInit belongs to interface componego.ApplicationConfigInit.
-func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode) (settings map[string]any, err error) {
+func (a *Application) ApplicationConfigInit(appMode componego.ApplicationMode, _ any) (settings map[string]any, err error) {
 	switch appMode {
 	case componego.ProductionMode:
 		settings, err = config_reader.Read("./config/production.config.json")
@@ -77,7 +77,7 @@ func (a *Application) ApplicationErrorHandler(err error, _ componego.Application
 }
 
 // ApplicationAction belongs to interface componego.Application.
-func (a *Application) ApplicationAction(env componego.Environment, _ []string) (int, error) {
+func (a *Application) ApplicationAction(env componego.Environment, _ any) (int, error) {
 	// We always run migrations after the application is initialized.
 	if _, err := env.DependencyInvoker().Invoke(migration.Run); err != nil {
 		return application.ExitWrapper(err)

@@ -29,7 +29,7 @@ import (
 	"github.com/componego/componego/impl/environment/managers/dependency/container"
 )
 
-type initializer = func(env componego.Environment) error
+type initializer = func(env componego.Environment, options any) error
 
 type Options struct {
 	ConfigProviderFactory    func() (componego.ConfigProvider, initializer)
@@ -44,8 +44,8 @@ type Options struct {
 		componentProvider componego.ComponentProvider,
 		dependencyInvoker componego.DependencyInvoker,
 	) componego.Environment
-	AppIO componego.ApplicationIO
-	Args  []string
+	AppIO      componego.ApplicationIO
+	Additional any
 }
 
 func Configure(options *Options) *Options {
@@ -67,15 +67,17 @@ func Configure(options *Options) *Options {
 	if options.AppIO == nil {
 		options.AppIO = application.NewIO(os.Stdin, os.Stdout, os.Stderr)
 	}
-	if options.Args == nil {
-		options.Args = os.Args
+	if options.Additional == nil {
+		// This variable can contain any data depending on how the application is started.
+		// By default, these are command line arguments.
+		options.Additional = os.Args
 	}
 	return options
 }
 
 func newComponentProviderFactory() (componego.ComponentProvider, initializer) {
 	manager, initializer := component.NewManager()
-	return manager, func(env componego.Environment) error {
+	return manager, func(env componego.Environment, _ any) error {
 		components, err := component.ExtractComponents(env.Application())
 		if err != nil {
 			return err
@@ -86,7 +88,7 @@ func newComponentProviderFactory() (componego.ComponentProvider, initializer) {
 
 func newDependencyInvokerFactory() (componego.DependencyInvoker, initializer) {
 	manager, initializer := dependency.NewManager()
-	return manager, func(env componego.Environment) error {
+	return manager, func(env componego.Environment, _ any) error {
 		dependencies, err := dependency.ExtractDependencies(env)
 		if err != nil {
 			return err
@@ -103,8 +105,8 @@ func newDependencyInvokerFactory() (componego.DependencyInvoker, initializer) {
 
 func newConfigFactory() (componego.ConfigProvider, initializer) {
 	manager, initializer := config.NewManager()
-	return manager, func(env componego.Environment) error {
-		parsedConfig, err := config.ParseConfig(env)
+	return manager, func(env componego.Environment, options any) error {
+		parsedConfig, err := config.ParseConfig(env, options)
 		if err != nil {
 			return err
 		}

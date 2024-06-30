@@ -88,7 +88,7 @@ This is related to the application [driver](./driver.md), but you can control it
 Options are some factories that implement all the entities that the framework provides.
 So this is the key (but not the only one) how you can replace the core of the framework with your code.
 
-Fo example, the runner uses the Golang application arguments to run (^^os.Args^^). You can specify your custom ones.
+For example, you can pass additional options to your application.
 Let's create a new Run function that takes arguments.
     ```go hl_lines="15"
     package custom_runner
@@ -103,9 +103,9 @@ Let's create a new Run function that takes arguments.
         "github.com/componego/componego/impl/runner/unhandled-errors"
     )
 
-    func Run(app componego.Application, appMode componego.ApplicationMode, args []string) int {
+    func Run(app componego.Application, appMode componego.ApplicationMode, additionalOptions any) int {
         d := driver.New(&driver.Options{
-            Args: args,
+            Additional: additionalOptions,
             // ... other options
         })
         exitCode, err := d.RunApplication(context.Background(), app, appMode)
@@ -115,6 +115,8 @@ Let's create a new Run function that takes arguments.
         return exitCode
     }
     ```
+
+Look at what options are available in the code driver to ensure you can control everything.
 
 !!! note
     We are creating a context in this code.

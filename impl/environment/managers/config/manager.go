@@ -93,9 +93,9 @@ func (m *manager) initialize(env componego.Environment, parsedConfig map[string]
 	return nil
 }
 
-func ParseConfig(env componego.Environment) (map[string]any, error) {
+func ParseConfig(env componego.Environment, options any) (map[string]any, error) {
 	if app, ok := env.Application().(componego.ApplicationConfigInit); ok {
-		parsedConfig, err := app.ApplicationConfigInit(env.ApplicationMode())
+		parsedConfig, err := app.ApplicationConfigInit(env.ApplicationMode(), options)
 		if err != nil {
 			return nil, ErrConfigInit.WithError(err)
 		}

@@ -16,7 +16,7 @@ func NewApplicationMock() componego.Application {
 			database.NewComponent(),
 		}, nil
 	})
-	factory.SetApplicationConfigInit(func(appMode componego.ApplicationMode) (map[string]any, error) {
+	factory.SetApplicationConfigInit(func(_ componego.ApplicationMode, _ any) (map[string]any, error) {
 		return map[string]any{
 			"databases.test-storage.driver": "db-driver-mock",
 			"databases.test-storage.source": "...",

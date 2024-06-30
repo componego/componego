@@ -105,7 +105,7 @@ func driverTester[T testing.TRun[T]](
 		}
 		for _, testCase := range testCases {
 			appFactory := application.NewFactory("Application Basic Test")
-			appFactory.SetApplicationAction(func(_ componego.Environment, _ []string) (int, error) {
+			appFactory.SetApplicationAction(func(_ componego.Environment, _ any) (int, error) {
 				return testCase.actionCode, testCase.actionErr
 			})
 			require.NotPanics(t, func() {
@@ -153,7 +153,7 @@ func driverTester[T testing.TRun[T]](
 			return prevErr
 		})
 		appFactory := application.NewFactory("Application Basic Test")
-		appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode) (map[string]any, error) {
+		appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode, _ any) (map[string]any, error) {
 			logger.LogData(buffer, "applicationConfigInit")
 			return nil, nil
 		})
@@ -168,7 +168,7 @@ func driverTester[T testing.TRun[T]](
 			logger.LogData(buffer, "applicationDependencies")
 			return nil, nil
 		})
-		appFactory.SetApplicationAction(func(_ componego.Environment, _ []string) (int, error) {
+		appFactory.SetApplicationAction(func(_ componego.Environment, _ any) (int, error) {
 			logger.LogData(buffer, "applicationAction")
 			return componego.SuccessExitCode, nil
 		})
@@ -220,7 +220,7 @@ func driverTester[T testing.TRun[T]](
 	t.Run("initialize configuration", func(t T) {
 		t.Run("return an error", func(t T) {
 			appFactory := application.NewFactory("Application Basic Test")
-			appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode) (map[string]any, error) {
+			appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode, _ any) (map[string]any, error) {
 				return nil, customErr
 			})
 			require.NotPanics(t, func() {
@@ -234,7 +234,7 @@ func driverTester[T testing.TRun[T]](
 
 		t.Run("throw panic as a string", func(t T) {
 			appFactory := application.NewFactory("Application Basic Test")
-			appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode) (map[string]any, error) {
+			appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode, _ any) (map[string]any, error) {
 				panic("panic occurred")
 			})
 			require.NotPanics(t, func() {
@@ -247,7 +247,7 @@ func driverTester[T testing.TRun[T]](
 
 		t.Run("throw panic as a custom type", func(t T) {
 			appFactory := application.NewFactory("Application Basic Test")
-			appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode) (map[string]any, error) {
+			appFactory.SetApplicationConfigInit(func(_ componego.ApplicationMode, _ any) (map[string]any, error) {
 				panic(types.BStruct{})
 			})
 			require.NotPanics(t, func() {

@@ -20,7 +20,7 @@ func (a *Application) ApplicationName() string {
 }
 
 // ApplicationAction belongs to interface componego.Application.
-func (a *Application) ApplicationAction(env componego.Environment, _ []string) (int, error) {
+func (a *Application) ApplicationAction(env componego.Environment, _ any) (int, error) {
 	_, err := fmt.Fprintln(env.ApplicationIO().OutputWriter(), "Hello World!")
 	return application.ExitWrapper(err)
 }

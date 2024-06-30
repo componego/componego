@@ -98,13 +98,13 @@ func (d *driver) CreateEnvironment(ctx context.Context, app componego.Applicatio
 	env = d.options.EnvironmentFactory(
 		ctx, app, d.options.AppIO, appMode, configProvider, componentProvider, dependencyInvoker,
 	)
-	if err = configInitializer(env); err != nil {
+	if err = configInitializer(env, d.options.Additional); err != nil {
 		return nil, err
 	}
-	if err = componentsInitializer(env); err != nil {
+	if err = componentsInitializer(env, d.options.Additional); err != nil {
 		return nil, err
 	}
-	if err = dependenciesInitializer(env); err != nil {
+	if err = dependenciesInitializer(env, d.options.Additional); err != nil {
 		return nil, err
 	}
 	return env, nil
@@ -129,7 +129,7 @@ func (d *driver) runInsideEnvironment(env componego.Environment) (exitCode int, 
 			}(component) // We support compatibility with older versions of the language.
 		}
 	}
-	return env.Application().ApplicationAction(env, d.options.Args)
+	return env.Application().ApplicationAction(env, d.options.Additional)
 }
 
 // ErrorRecoveryOnStop returns an error after panic recovery.

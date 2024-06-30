@@ -26,9 +26,9 @@ type Factory interface {
 	SetApplicationName(name string)
 	SetApplicationComponents(components func() ([]componego.Component, error))
 	SetApplicationDependencies(dependencies func() ([]componego.Dependency, error))
-	SetApplicationConfigInit(configInit func(appMode componego.ApplicationMode) (map[string]any, error))
+	SetApplicationConfigInit(configInit func(appMode componego.ApplicationMode, options any) (map[string]any, error))
 	SetApplicationErrorHandler(errorHandler func(err error, appIO componego.ApplicationIO, appMode componego.ApplicationMode) error)
-	SetApplicationAction(action func(env componego.Environment, args []string) (int, error))
+	SetApplicationAction(action func(env componego.Environment, options any) (int, error))
 	Build() componego.Application
 }
 
@@ -36,9 +36,9 @@ type factory struct {
 	name         string
 	components   func() ([]componego.Component, error)
 	dependencies func() ([]componego.Dependency, error)
-	configInit   func(appMode componego.ApplicationMode) (map[string]any, error)
+	configInit   func(appMode componego.ApplicationMode, options any) (map[string]any, error)
 	errorHandler func(err error, appIO componego.ApplicationIO, appMode componego.ApplicationMode) error
-	action       func(env componego.Environment, args []string) (int, error)
+	action       func(env componego.Environment, options any) (int, error)
 }
 
 func NewFactory(name string) Factory {
@@ -63,7 +63,7 @@ func (f *factory) SetApplicationDependencies(dependencies func() ([]componego.De
 }
 
 // SetApplicationConfigInit belongs to interface Factory.
-func (f *factory) SetApplicationConfigInit(configInit func(appMode componego.ApplicationMode) (map[string]any, error)) {
+func (f *factory) SetApplicationConfigInit(configInit func(appMode componego.ApplicationMode, options any) (map[string]any, error)) {
 	f.configInit = configInit
 }
 
@@ -73,7 +73,7 @@ func (f *factory) SetApplicationErrorHandler(errorHandler func(err error, appIO 
 }
 
 // SetApplicationAction belongs to interface Factory.
-func (f *factory) SetApplicationAction(action func(env componego.Environment, args []string) (int, error)) {
+func (f *factory) SetApplicationAction(action func(env componego.Environment, options any) (int, error)) {
 	f.action = action
 }
 
@@ -93,9 +93,9 @@ type QuickApplication struct {
 	Name         string
 	Components   func() ([]componego.Component, error)
 	Dependencies func() ([]componego.Dependency, error)
-	ConfigInit   func(appMode componego.ApplicationMode) (map[string]any, error)
+	ConfigInit   func(appMode componego.ApplicationMode, options any) (map[string]any, error)
 	ErrorHandler func(err error, appIO componego.ApplicationIO, appMode componego.ApplicationMode) error
-	Action       func(env componego.Environment, args []string) (int, error)
+	Action       func(env componego.Environment, options any) (int, error)
 }
 
 // ApplicationName belongs to interface componego.Application.
@@ -120,11 +120,11 @@ func (q *QuickApplication) ApplicationDependencies() ([]componego.Dependency, er
 }
 
 // ApplicationConfigInit belongs to interface componego.ApplicationConfigInit.
-func (q *QuickApplication) ApplicationConfigInit(appMode componego.ApplicationMode) (map[string]any, error) {
+func (q *QuickApplication) ApplicationConfigInit(appMode componego.ApplicationMode, options any) (map[string]any, error) {
 	if q.ConfigInit == nil {
 		return nil, nil
 	}
-	return q.ConfigInit(appMode)
+	return q.ConfigInit(appMode, options)
 }
 
 // ApplicationErrorHandler belongs to interface componego.ApplicationErrorHandler.
@@ -136,11 +136,11 @@ func (q *QuickApplication) ApplicationErrorHandler(err error, appIO componego.Ap
 }
 
 // ApplicationAction belongs to interface componego.Application.
-func (q *QuickApplication) ApplicationAction(env componego.Environment, args []string) (int, error) {
+func (q *QuickApplication) ApplicationAction(env componego.Environment, options any) (int, error) {
 	if q.Action == nil {
 		return ExitWrapper(errors.New("there is no action in application"))
 	}
-	return q.Action(env, args)
+	return q.Action(env, options)
 }
 
 var (
