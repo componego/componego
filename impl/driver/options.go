@@ -27,6 +27,7 @@ import (
 	"github.com/componego/componego/impl/environment/managers/config"
 	"github.com/componego/componego/impl/environment/managers/dependency"
 	"github.com/componego/componego/impl/environment/managers/dependency/container"
+	"github.com/componego/componego/internal/system"
 )
 
 type initializer = func(env componego.Environment, options any) error
@@ -65,7 +66,7 @@ func Configure(options *Options) *Options {
 		options.EnvironmentFactory = environment.New
 	}
 	if options.AppIO == nil {
-		options.AppIO = application.NewIO(os.Stdin, os.Stdout, os.Stderr)
+		options.AppIO = application.NewIO(system.Stdin, system.Stdout, system.Stderr)
 	}
 	if options.Additional == nil {
 		// This variable can contain any data depending on how the application is started.

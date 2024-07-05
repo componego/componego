@@ -14,24 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package developer
+package tests
 
 import (
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
+	"sync"
+	"testing"
+
+	"github.com/componego/componego/internal/system"
+	"github.com/componego/componego/internal/testing/require"
 )
 
-func NumGoroutineBeforeExit() int {
-	numGoroutine := runtime.NumGoroutine()
-	if numGoroutine == 1 {
-		return numGoroutine
-	}
-	// Signals start a goroutine that never stops.
-	// We make sure that this goroutine does not influence the result.
-	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, syscall.SIGTERM)
-	signal.Stop(interruptChan)
-	return runtime.NumGoroutine() - 1
+func TestNumGoroutineBeforeExit(t *testing.T) {
+	t.Run("basic test", func(t *testing.T) {
+		require.True(t, system.NumGoroutineBeforeExit() >= 1)
+		numGoroutine := 0
+		wg := sync.WaitGroup{}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			numGoroutine = system.NumGoroutineBeforeExit()
+		}()
+		wg.Wait()
+		require.True(t, numGoroutine > 1)
+	})
 }

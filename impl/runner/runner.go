@@ -18,12 +18,12 @@ package runner
 
 import (
 	"context"
-	"os"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/driver"
 	"github.com/componego/componego/impl/runner/unhandled-errors"
 	"github.com/componego/componego/internal/developer"
+	"github.com/componego/componego/internal/system"
 	"github.com/componego/componego/internal/utils"
 )
 
@@ -33,7 +33,7 @@ func Run(app componego.Application, appMode componego.ApplicationMode) int {
 	exitCode, err := d.RunApplication(context.Background(), app, appMode)
 	if err != nil {
 		// Here we display all errors that were not processed.
-		utils.Fprint(os.Stderr, unhandled_errors.ToString(err, appMode, unhandled_errors.GetHandlers()))
+		utils.Fprint(system.Stderr, unhandled_errors.ToString(err, appMode, unhandled_errors.GetHandlers()))
 	}
 	return exitCode
 }
@@ -41,12 +41,12 @@ func Run(app componego.Application, appMode componego.ApplicationMode) int {
 // RunAndExit runs the application and exits the program after stopping the application.
 func RunAndExit(app componego.Application, appMode componego.ApplicationMode) {
 	exitCode := Run(app, appMode)
-	if appMode == componego.DeveloperMode && developer.NumGoroutineBeforeExit() > 1 {
+	if appMode == componego.DeveloperMode && system.NumGoroutineBeforeExit() > 1 {
 		// In any case, all goroutines will be terminated after exiting the application, but we will show this message.
-		developer.Warning(os.Stdout, "The application was stopped, but goroutines were still running.")
-		developer.Warning(os.Stdout, "So it may not be stopped correctly. In some cases, this notification may be false.")
-		developer.Warning(os.Stdout, "Read more here https://componego.github.io/warnings/goroutine-leak")
+		developer.Warning(system.Stdout, "The application was stopped, but goroutines were still running.")
+		developer.Warning(system.Stdout, "So it may not be stopped correctly. In some cases, this notification may be false.")
+		developer.Warning(system.Stdout, "Read more here https://componego.github.io/warnings/goroutine-leak")
 	}
 	// Make sure you call this function in the root goroutine to ensure the program exits correctly.
-	os.Exit(exitCode)
+	system.Exit(exitCode)
 }
