@@ -22,81 +22,88 @@ import (
 
 type XError interface {
 	error
-	Options() []Option
-	WithMessage(message string, options ...Option) XError
-	WithError(err error, options ...Option) XError
-	WithOptions(options ...Option) XError
+	ErrorCode() string
+	ErrorOptions() []Option
+	WithMessage(message string, code string, options ...Option) XError
+	WithError(err error, code string, options ...Option) XError
+	WithOptions(code string, options ...Option) XError
 }
 
 type xError struct {
 	parent    XError
 	current   error
 	asMessage bool
+	code      string
 	options   []Option
 }
 
-func New(message string, options ...Option) XError {
+func New(message string, code string, options ...Option) XError {
 	return &xError{
 		parent:    nil,
 		current:   errors.New(message),
 		asMessage: true,
+		code:      code,
 		options:   options,
 	}
 }
 
-func ConvertToXError(err error, options ...Option) XError {
-	// noinspection ALL
-	if xErr, ok := err.(XError); ok { //nolint:errorlint
-		return xErr.WithOptions(options...)
-	}
+func ToXError(err error, code string, options ...Option) XError {
 	return &xError{
 		parent:    nil,
 		current:   err,
 		asMessage: false,
+		code:      code,
 		options:   options,
 	}
 }
 
 func (x *xError) Error() string {
 	if x.parent == nil {
-		return x.current.Error()
+		if x.code == "" {
+			return x.current.Error()
+		}
+		return x.current.Error() + " (" + x.code + ")"
 	}
-	return x.parent.Error() + " -> " + x.current.Error()
+	if x.code == "" {
+		return x.parent.Error() + "\n" + x.current.Error()
+	}
+	return x.parent.Error() + "\n" + x.current.Error() + " (" + x.code + ")"
 }
 
-func (x *xError) Options() []Option {
+func (x *xError) ErrorCode() string {
+	return x.code
+}
+
+func (x *xError) ErrorOptions() []Option {
 	return x.options
 }
 
-func (x *xError) WithMessage(message string, options ...Option) XError {
+func (x *xError) WithMessage(message string, code string, options ...Option) XError {
 	return &xError{
 		parent:    x,
 		current:   errors.New(message),
 		asMessage: true,
+		code:      code,
 		options:   options,
 	}
 }
 
-func (x *xError) WithError(err error, options ...Option) XError {
-	if errors.Is(err, x) {
-		return x.WithOptions(options...)
-	}
+func (x *xError) WithError(err error, code string, options ...Option) XError {
 	return &xError{
 		parent:    x,
 		current:   err,
 		asMessage: false,
+		code:      code,
 		options:   options,
 	}
 }
 
-func (x *xError) WithOptions(options ...Option) XError {
-	if len(options) == 0 {
-		return x
-	}
+func (x *xError) WithOptions(code string, options ...Option) XError {
 	return &xError{
 		parent:    nil,
 		current:   x,
 		asMessage: false,
+		code:      code,
 		options:   options,
 	}
 }

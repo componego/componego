@@ -32,29 +32,55 @@ func DefaultHandler(err error, writer io.Writer, _ componego.ApplicationMode) {
 	utils.Fprintln(theme.GetWriter("topMessage"), "> An unhandled error has occurred in the application.")
 	utils.Fprintln(theme.GetWriter("blockName"), "Details:")
 	utils.Fprintln(theme.GetWriter("errorText"), err)
-	errOptions := xerrors.GetAllOptions(err)
-	if len(errOptions) == 0 {
+	errs := xerrors.UnwrapAll(err)
+	xErrs := make([]xerrors.XError, 0, len(errs))
+	duplicateCodes := make(map[string]int, len(errs))
+	for _, err := range errs {
+		// noinspection ALL
+		xErr, ok := err.(xerrors.XError) //nolint:errorlint
+		if !ok || len(xErr.ErrorOptions()) == 0 {
+			continue
+		}
+		xErrs = append(xErrs, xErr)
+		duplicateCodes[xErr.ErrorCode()]++
+	}
+	if len(xErrs) == 0 {
 		return
 	}
-	hasDuplicateKeys := false
-	keys := make(map[string]int, len(errOptions))
-	for _, option := range errOptions {
-		key := option.Key()
-		keys[key] = keys[key] + 1
-		if keys[key] > 1 {
-			hasDuplicateKeys = true
-		}
-	}
+	prepareDuplicates(duplicateCodes)
 	utils.Fprintln(theme.GetWriter("blockName"), "Options:")
-	for i, option := range errOptions {
+	for i, xErr := range xErrs {
 		utils.Fprint(theme.GetWriter("default"), i+1, ". ")
-		if hasDuplicateKeys {
-			key := option.Key()
-			keys[key] = keys[key] - 1
-			utils.Fprint(theme.GetWriter("optionKey"), key, " (", keys[key], ") => ")
+		errCode := xErr.ErrorCode()
+		if errCode == "" {
+			utils.Fprint(theme.GetWriter("default"), "<empty>")
 		} else {
-			utils.Fprint(theme.GetWriter("optionKey"), option.Key(), " => ")
+			utils.Fprint(theme.GetWriter("errorText"), errCode)
 		}
+		if _, ok := duplicateCodes[errCode]; ok {
+			utils.Fprint(theme.GetWriter("default"), " (", duplicateCodes[errCode], ")")
+			duplicateCodes[errCode]++
+		}
+		utils.Fprintln(theme.GetWriter("default"), ":")
+		renderOptions(theme, xErr.ErrorOptions())
+	}
+}
+
+func renderOptions(theme color.Theme, options []xerrors.Option) {
+	duplicateKeys := make(map[string]int, len(options))
+	for _, option := range options {
+		duplicateKeys[option.Key()]++
+	}
+	prepareDuplicates(duplicateKeys)
+	for _, option := range options {
+		optionKey := option.Key()
+		utils.Fprint(theme.GetWriter("default"), " * ")
+		utils.Fprint(theme.GetWriter("optionKey"), optionKey)
+		if _, ok := duplicateKeys[optionKey]; ok {
+			utils.Fprint(theme.GetWriter("default"), " (", duplicateKeys[optionKey], ")")
+			duplicateKeys[optionKey]++
+		}
+		utils.Fprint(theme.GetWriter("default"), " => ")
 		// We render everything in one goroutine to be able to correctly catch an error during rendering error options.
 		utils.Fprintln(theme.GetWriter("optionValue"), renderVariable(option.Value()))
 	}
@@ -92,6 +118,16 @@ func renderVariable(value any) string {
 			return value
 		},
 	})
+}
+
+func prepareDuplicates(values map[string]int) {
+	for key, value := range values {
+		if value <= 1 {
+			delete(values, key)
+		} else {
+			values[key] = 0
+		}
+	}
 }
 
 func getUnhandledErrorTheme(writer io.Writer) color.Theme {

@@ -29,12 +29,12 @@ import (
 )
 
 var (
-	ErrDependencyManager   = xerrors.New("error inside dependency manager")
-	ErrExtractDependencies = ErrDependencyManager.WithMessage("an error occurred while receiving dependencies")
-	ErrNilArgument         = ErrDependencyManager.WithMessage("nil argument")
-	ErrNotFunction         = ErrDependencyManager.WithMessage("argument is not a function and cannot be used as a constructor for dependency injection")
-	ErrVariadicFunction    = ErrDependencyManager.WithMessage("function has a variable number of arguments and cannot be used as a constructor for dependency injection")
-	ErrNotAllowedTarget    = ErrDependencyManager.WithMessage("target is not allowed for dependency injection")
+	ErrDependencyManager   = xerrors.New("error inside dependency manager", "E0510")
+	ErrExtractDependencies = ErrDependencyManager.WithMessage("an error occurred while receiving dependencies", "E0511")
+	ErrNilArgument         = ErrDependencyManager.WithMessage("nil argument", "E0512")
+	ErrNotFunction         = ErrDependencyManager.WithMessage("argument is not a function and cannot be used as a constructor for dependency injection", "E0513")
+	ErrVariadicFunction    = ErrDependencyManager.WithMessage("function has a variable number of arguments and cannot be used as a constructor for dependency injection", "E0514")
+	ErrNotAllowedTarget    = ErrDependencyManager.WithMessage("target is not allowed for dependency injection", "E0515")
 )
 
 type manager struct {
@@ -52,12 +52,12 @@ func (m *manager) Invoke(function any) (any, error) {
 	}
 	reflectType := reflect.TypeOf(function)
 	if reflectType.Kind() != reflect.Func {
-		return nil, ErrNotFunction.WithOptions(
+		return nil, ErrNotFunction.WithOptions("E0516",
 			xerrors.NewOption("componego:dependency:function", reflectType),
 		)
 	}
 	if reflectType.IsVariadic() {
-		return nil, ErrVariadicFunction.WithOptions(
+		return nil, ErrVariadicFunction.WithOptions("E0517",
 			xerrors.NewOption("componego:dependency:function", reflectType),
 		)
 	}
@@ -66,7 +66,7 @@ func (m *manager) Invoke(function any) (any, error) {
 	for i := 0; i < numIn; i++ {
 		value, err := m.container.GetValue(reflectType.In(i))
 		if err != nil {
-			return nil, ErrDependencyManager.WithError(err,
+			return nil, ErrDependencyManager.WithError(err, "E0518",
 				xerrors.NewOption("componego:dependency:function", reflectType),
 				xerrors.NewOption("componego:dependency:argument", reflectType.In(i)),
 			)
@@ -80,7 +80,7 @@ func (m *manager) Invoke(function any) (any, error) {
 	outputLen := len(output)
 	if last := output[outputLen-1]; utils.IsErrorType(last.Type()) {
 		if errInstance := last.Interface(); errInstance != nil {
-			return nil, ErrDependencyManager.WithError(errInstance.(error),
+			return nil, ErrDependencyManager.WithError(errInstance.(error), "E0519",
 				xerrors.NewOption("componego:dependency:function", reflectType),
 			)
 		}
@@ -99,13 +99,13 @@ func (m *manager) Populate(target any) error {
 	reflectType := reflect.TypeOf(target).Elem()
 	if reflectType.Kind() != reflect.Interface &&
 		(reflectType.Kind() != reflect.Pointer || reflectType.Elem().Kind() != reflect.Struct) {
-		return ErrNotAllowedTarget.WithOptions(
+		return ErrNotAllowedTarget.WithOptions("E0520",
 			xerrors.NewOption("componego:dependency:target", reflectType),
 		)
 	}
 	value, err := m.container.GetValue(reflectType)
 	if err != nil {
-		return ErrDependencyManager.WithError(err,
+		return ErrDependencyManager.WithError(err, "E0521",
 			xerrors.NewOption("componego:dependency:target", reflectType),
 		)
 	}
@@ -120,7 +120,7 @@ func (m *manager) PopulateFields(target any) error {
 	}
 	reflectType := reflect.TypeOf(target)
 	if reflectType.Kind() != reflect.Pointer || reflectType.Elem().Kind() != reflect.Struct {
-		return ErrNotAllowedTarget.WithOptions(
+		return ErrNotAllowedTarget.WithOptions("E0522",
 			xerrors.NewOption("componego:dependency:target", reflectType),
 		)
 	}
@@ -137,7 +137,7 @@ func (m *manager) PopulateFields(target any) error {
 		}
 		value, err := m.container.GetValue(field.Type)
 		if err != nil {
-			return ErrDependencyManager.WithError(err,
+			return ErrDependencyManager.WithError(err, "E0523",
 				xerrors.NewOption("componego:dependency:target", reflect.TypeOf(target)), // original type.
 				xerrors.NewOption("componego:dependency:fieldName", field.Name),
 			)
@@ -167,7 +167,7 @@ func ExtractDependencies(env componego.Environment) ([]componego.Dependency, err
 		if component, ok := component.(componego.ComponentDependencies); !ok {
 			continue
 		} else if dependencies, err := component.ComponentDependencies(); err != nil {
-			return nil, ErrExtractDependencies.WithError(err,
+			return nil, ErrExtractDependencies.WithError(err, "E0524",
 				xerrors.NewOption("componego:dependency:component", component),
 			)
 		} else if len(dependencies) > 0 {
@@ -177,7 +177,7 @@ func ExtractDependencies(env componego.Environment) ([]componego.Dependency, err
 	}
 	if app, ok := env.Application().(componego.ApplicationDependencies); ok {
 		if dependencies, err := app.ApplicationDependencies(); err != nil {
-			return nil, ErrExtractDependencies.WithError(err)
+			return nil, ErrExtractDependencies.WithError(err, "E0525")
 		} else if len(dependencies) > 0 {
 			allDependencies = append(allDependencies, dependencies)
 			countDependencies += len(dependencies)

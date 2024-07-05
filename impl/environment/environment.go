@@ -26,8 +26,8 @@ import (
 )
 
 var (
-	ErrInvalidContext = xerrors.New("new content is not created based on previous context")
-	ErrNoContext      = xerrors.New("there is no context value with environment")
+	ErrInvalidParentContext   = xerrors.New("new content is not created based on previous context", "E0210")
+	ErrNoEnvironmentInContext = xerrors.New("there is no environment in the context", "E0220")
 )
 
 type contextKey struct{}
@@ -84,7 +84,7 @@ func (e *environment) SetContext(ctx context.Context) error {
 		e.context = ctx
 		return nil
 	}
-	return ErrInvalidContext
+	return ErrInvalidParentContext
 }
 
 // Application returns a current application object.
@@ -122,7 +122,7 @@ func GetEnvironment(ctx context.Context) (componego.Environment, error) {
 	if env, ok := ctx.Value(contextKey{}).(componego.Environment); ok {
 		return env, nil
 	}
-	return nil, ErrNoContext
+	return nil, ErrNoEnvironmentInContext
 }
 
 func GetEnvironmentOrPanic(ctx context.Context) componego.Environment {

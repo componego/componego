@@ -29,10 +29,10 @@ const (
 )
 
 var (
-	ErrConfigManager = xerrors.New("error inside config manager")
-	ErrConfigInit    = ErrConfigManager.WithMessage("config init error")
-	ErrConfigGet     = ErrConfigManager.WithMessage("config get error")
-	ErrValueNotFound = ErrConfigGet.WithMessage("config value not found")
+	ErrConfigManager = xerrors.New("error inside config manager", "E0310")
+	ErrConfigInit    = ErrConfigManager.WithMessage("config init error", "E0311")
+	ErrConfigGet     = ErrConfigManager.WithMessage("config get error", "E0312")
+	ErrValueNotFound = ErrConfigGet.WithMessage("config value not found", "E0313")
 )
 
 type manager struct {
@@ -51,7 +51,7 @@ func (m *manager) ConfigValue(configKey string, processor componego.Processor) (
 		if ok {
 			return value, nil
 		}
-		return nil, ErrValueNotFound.WithOptions(
+		return nil, ErrValueNotFound.WithOptions("E0314",
 			xerrors.NewOption("componego:config:key", configKey),
 		)
 	}
@@ -63,7 +63,7 @@ func (m *manager) ConfigValue(configKey string, processor componego.Processor) (
 			return value, nil
 		}
 	}
-	return nil, ErrConfigGet.WithError(err,
+	return nil, ErrConfigGet.WithError(err, "E0315",
 		xerrors.NewOption("componego:config:key", configKey),
 	)
 }
@@ -97,7 +97,7 @@ func ParseConfig(env componego.Environment, options any) (map[string]any, error)
 	if app, ok := env.Application().(componego.ApplicationConfigInit); ok {
 		parsedConfig, err := app.ApplicationConfigInit(env.ApplicationMode(), options)
 		if err != nil {
-			return nil, ErrConfigInit.WithError(err)
+			return nil, ErrConfigInit.WithError(err, "E0316")
 		}
 		return parsedConfig, nil
 	}

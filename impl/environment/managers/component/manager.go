@@ -25,8 +25,8 @@ import (
 )
 
 var (
-	ErrManager            = xerrors.New("error inside component manager")
-	ErrCyclicDependencies = ErrManager.WithMessage("cycle detected in dependencies between components")
+	ErrComponentManager   = xerrors.New("error inside component manager", "E0410")
+	ErrCyclicDependencies = ErrComponentManager.WithMessage("cycle detected in dependencies between components", "E0411")
 )
 
 type manager struct {
@@ -70,7 +70,7 @@ func (m *manager) initialize(components []componego.Component) error {
 					continue
 				}
 				cyclicDependencyProvider := getCyclicDependencyProvider(oldItem)
-				return ErrCyclicDependencies.WithOptions(
+				return ErrCyclicDependencies.WithOptions("E0412",
 					xerrors.NewCallableOption("component:cyclicDependencies", cyclicDependencyProvider),
 				)
 			}
@@ -114,7 +114,7 @@ func ExtractComponents(app componego.Application) ([]componego.Component, error)
 		if err == nil {
 			return components, nil
 		}
-		return nil, ErrManager.WithError(err,
+		return nil, ErrComponentManager.WithError(err, "E0413",
 			xerrors.NewOption("componego:component:application", app),
 		)
 	}

@@ -26,20 +26,20 @@ import (
 
 func XErrorsTester[T testing.T](
 	t testing.TRun[T],
-	factory func(message string, options ...xerrors.Option) xerrors.XError,
+	factory func(message string, code string, options ...xerrors.Option) xerrors.XError,
 ) {
 	err1 := errors.New("error1")
-	err1x := factory("error1")
+	err1x := factory("error1", "E1X")
 	err2 := errors.New("error2")
-	err2x := factory("error2")
+	err2x := factory("error2", "E2X")
 	err3 := errors.New("error3")
-	err3x := factory("error3")
+	err3x := factory("error3", "E3X")
 	err1S3 := errors.Join(err1, err3)
-	err1xS3x := err1x.WithError(err3x)
+	err1xS3x := err1x.WithError(err3x, "E1XS3X")
 	err1S2 := errors.Join(err1, err2)
-	err1xS2 := err1x.WithError(err2)
+	err1xS2 := err1x.WithError(err2, "E1XS2")
 	err1S2S3 := errors.Join(err1S2, err3)
-	err1xS2S3x := err1xS2.WithError(err3x)
+	err1xS2S3x := err1xS2.WithError(err3x, "E1XS2S3X")
 	t.Run("comparison with the original error package", func(t T) {
 		testCases := [...]struct {
 			a1 error
@@ -106,10 +106,21 @@ func XErrorsTester[T testing.T](
 			{err1S2S3, err1xS2S3x}, // 4
 		}
 		for i, testCase := range testCases2 {
-			if strings.ReplaceAll(testCase.a.Error(), "\n", " -> ") != testCase.b.Error() {
+			if testCase.a.Error() != convertErrorMessage(testCase.b.Error()) {
 				t.Errorf("#%d failed", i+1)
 				t.FailNow()
 			}
 		}
 	})
+}
+
+func convertErrorMessage(errMessage string) string {
+	lines := strings.Split(errMessage, "\n")
+	for i, line := range lines {
+		index := strings.Index(line, " (")
+		if index != -1 {
+			lines[i] = line[:index]
+		}
+	}
+	return strings.Join(lines, "\n")
 }

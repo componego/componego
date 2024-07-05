@@ -25,12 +25,12 @@ import (
 )
 
 var (
-	ErrVendorProxy           = xerrors.New("vendor proxy error")
-	ErrFunctionExists        = ErrVendorProxy.WithMessage("such a function already exists")
-	ErrFunctionNotExists     = ErrVendorProxy.WithMessage("function does not exist")
-	ErrInvalidArgument       = ErrVendorProxy.WithMessage("function argument is invalid")
-	ErrArgumentsNotValidated = ErrVendorProxy.WithMessage("arguments are not validated")
-	ErrWrongCountArguments   = ErrVendorProxy.WithMessage("wrong count of arguments")
+	ErrVendorProxy           = xerrors.New("vendor proxy error", "E0810")
+	ErrFunctionExists        = ErrVendorProxy.WithMessage("such a function already exists", "E0811")
+	ErrFunctionNotExists     = ErrVendorProxy.WithMessage("function does not exist", "E0812")
+	ErrInvalidArgument       = ErrVendorProxy.WithMessage("function argument is invalid", "E0813")
+	ErrArgumentsNotValidated = ErrVendorProxy.WithMessage("arguments are not validated", "E0814")
+	ErrWrongCountArguments   = ErrVendorProxy.WithMessage("wrong count of arguments", "E0815")
 
 	instances map[string]Proxy
 	mutex     sync.Mutex
@@ -133,7 +133,7 @@ func (p *proxy) CallFunction(name string, args ...any) (result any, err error) {
 }
 
 func (p *proxy) getError(err xerrors.XError, functionName string) error {
-	return err.WithOptions(
+	return err.WithOptions("E0816",
 		xerrors.NewOption("vendorProxy:name", p.name),
 		xerrors.NewOption("vendorProxy:functionName", functionName),
 	)
@@ -149,9 +149,12 @@ func (p *proxy) contextCall(functionName string, function contextFunction, args 
 				err = p.getError(ErrArgumentsNotValidated, functionName)
 			}
 		} else if ctx.validationFailed || !ctx.validated {
-			err = p.getError(ErrInvalidArgument.WithOptions(
-				xerrors.NewOption("vendorProxy:panic", r),
-			), functionName)
+			err = p.getError(
+				ErrInvalidArgument.WithOptions("E0817",
+					xerrors.NewOption("vendorProxy:panic", r),
+				),
+				functionName,
+			)
 		} else {
 			panic(r)
 		}

@@ -29,9 +29,9 @@ import (
 
 var (
 	// ErrPanic is an error thrown when a panic is received.
-	ErrPanic = xerrors.New("global panic")
+	ErrPanic = xerrors.New("global panic", "E0100")
 	// ErrUnknownPanic is an error thrown when a panic of an unknown type is received.
-	ErrUnknownPanic = ErrPanic.WithMessage("unknown panic")
+	ErrUnknownPanic = ErrPanic.WithMessage("unknown panic", "E0101")
 )
 
 // Driver is an interface that describes the driver for starting and controlling the application.
@@ -143,14 +143,14 @@ func ErrorRecoveryOnStop(recover any, prevErr error) (newErr error) {
 	}
 	// noinspection ALL
 	if err, ok := recover.(error); ok {
-		newErr = ErrPanic.WithError(err, errOptions...)
+		newErr = ErrPanic.WithError(err, "E0102", errOptions...)
 	} else if message, ok := recover.(string); ok {
-		newErr = ErrPanic.WithMessage(message, errOptions...)
+		newErr = ErrPanic.WithMessage(message, "E0103", errOptions...)
 	} else if reflectValue := reflect.ValueOf(recover); reflectValue.Kind() == reflect.String {
 		// Handle the remaining type set of ~string.
-		newErr = ErrPanic.WithMessage(reflectValue.String(), errOptions...)
+		newErr = ErrPanic.WithMessage(reflectValue.String(), "E0104", errOptions...)
 	} else {
-		newErr = ErrUnknownPanic.WithOptions(errOptions...)
+		newErr = ErrUnknownPanic.WithOptions("E0105", errOptions...)
 	}
 	if prevErr == nil {
 		return newErr

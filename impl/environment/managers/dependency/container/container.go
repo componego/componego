@@ -26,17 +26,17 @@ import (
 )
 
 var (
-	ErrDependencyContainer  = xerrors.New("error inside dependency container")
-	ErrInvalidProvidedType  = ErrDependencyContainer.WithMessage("invalid provided dependency type or factory")
-	ErrNilFactory           = ErrInvalidProvidedType.WithMessage("dependency factory is nil")
-	ErrVariadicFactory      = ErrInvalidProvidedType.WithMessage("dependency factory has a variable number of arguments")
-	ErrNoReturnDependencies = ErrInvalidProvidedType.WithMessage("dependency factory does not return any type")
-	ErrSameDependencyType   = ErrInvalidProvidedType.WithMessage("dependency factory returns more than one dependency variable of the same type")
-	ErrIncorrectRewrite     = ErrInvalidProvidedType.WithMessage("dependency type substituted incorrectly")
-	ErrGettingDependency    = ErrDependencyContainer.WithMessage("error getting dependency for type")
-	ErrUndeclaredDependency = ErrGettingDependency.WithMessage("factory accepts an undeclared dependency type")
-	ErrCyclicDependencies   = ErrGettingDependency.WithMessage("cycle detected in dependencies")
-	ErrNotFoundType         = ErrGettingDependency.WithMessage("dependency of the requested type was not found")
+	ErrDependencyContainer  = xerrors.New("error inside dependency container", "E0550")
+	ErrInvalidProvidedType  = ErrDependencyContainer.WithMessage("invalid provided dependency type or factory", "E0551")
+	ErrNilFactory           = ErrInvalidProvidedType.WithMessage("dependency factory is nil", "E0552")
+	ErrVariadicFactory      = ErrInvalidProvidedType.WithMessage("dependency factory has a variable number of arguments", "E0553")
+	ErrNoReturnDependencies = ErrInvalidProvidedType.WithMessage("dependency factory does not return any type", "E0554")
+	ErrSameDependencyType   = ErrInvalidProvidedType.WithMessage("dependency factory returns more than one dependency variable of the same type", "E0555")
+	ErrIncorrectRewrite     = ErrInvalidProvidedType.WithMessage("dependency type substituted incorrectly", "E0556")
+	ErrGettingDependency    = ErrDependencyContainer.WithMessage("error getting dependency for type", "E0557")
+	ErrUndeclaredDependency = ErrGettingDependency.WithMessage("factory accepts an undeclared dependency type", "E0558")
+	ErrCyclicDependencies   = ErrGettingDependency.WithMessage("cycle detected in dependencies", "E0559")
+	ErrNotFoundType         = ErrGettingDependency.WithMessage("dependency of the requested type was not found", "E0560")
 )
 
 type Container interface {
@@ -92,7 +92,7 @@ func (c *container) initialize(dependencies []componego.Dependency) error {
 func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
 	nodeObj := c.nodes[itemType]
 	if nodeObj == nil {
-		return *new(reflect.Value), ErrNotFoundType.WithOptions(
+		return *new(reflect.Value), ErrNotFoundType.WithOptions("E0561",
 			xerrors.NewOption("componego:dependency:container:requestedType", itemType),
 		)
 	}
@@ -107,7 +107,7 @@ func (c *container) initValue(nodeObj *node) error {
 	}
 	factoryObj := nodeObj.factory
 	if factoryObj.lock {
-		return ErrCyclicDependencies.WithOptions(
+		return ErrCyclicDependencies.WithOptions("E0562",
 			xerrors.NewOption("componego:dependency:container:cycle", c.getCyclicDependencies()),
 			xerrors.NewOption("componego:dependency:container:factory", factoryObj.value.Type()),
 			xerrors.NewOption("componego:dependency:container:requestedType", nodeObj.reflectType),
@@ -126,7 +126,7 @@ func (c *container) initValue(nodeObj *node) error {
 		dependencyNode := c.nodes[dependencyType]
 		// We check that dependency are present.
 		if dependencyNode == nil {
-			return ErrUndeclaredDependency.WithOptions(
+			return ErrUndeclaredDependency.WithOptions("E0563",
 				xerrors.NewOption("componego:dependency:container:factory", factoryObj.value.Type()),
 				xerrors.NewOption("componego:dependency:container:undeclaredType", dependencyType),
 			)
@@ -143,7 +143,7 @@ func (c *container) initValue(nodeObj *node) error {
 		// An additional type check is not needed, because we already know that the last value is an error.
 		if lastValue := output[outputLen-1].Interface(); lastValue != nil {
 			// noinspection ALL
-			return ErrGettingDependency.WithError(lastValue.(error),
+			return ErrGettingDependency.WithError(lastValue.(error), "E0564",
 				xerrors.NewOption("componego:dependency:container:factory", factoryObj.value.Type()),
 				xerrors.NewOption("componego:dependency:container:requestedType", nodeObj.reflectType),
 			)
@@ -167,14 +167,14 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 	switch itemType.Kind() {
 	case reflect.Func: // The element is a dependency factory.
 		if itemType.IsVariadic() {
-			return ErrVariadicFactory.WithOptions(
+			return ErrVariadicFactory.WithOptions("E0565",
 				xerrors.NewOption("componego:dependency:container:factory", itemType),
 			)
 		}
 		numIn := itemType.NumIn()
 		numOut := itemType.NumOut()
 		if numOut == 0 {
-			return ErrNoReturnDependencies.WithOptions(
+			return ErrNoReturnDependencies.WithOptions("E0566",
 				xerrors.NewOption("componego:dependency:container:factory", itemType),
 			)
 		}
@@ -184,7 +184,7 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 		if utils.IsErrorType(itemType.Out(numOut - 1)) { // last value.
 			numOut--
 			if numOut == 0 {
-				return ErrNoReturnDependencies.WithOptions(
+				return ErrNoReturnDependencies.WithOptions("E0567",
 					xerrors.NewOption("componego:dependency:container:factory", itemType),
 				)
 			}
@@ -200,7 +200,7 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 		for i := 0; i < numOut; i++ {
 			outType := itemType.Out(i)
 			if !isAllowedFactoryReturnType(outType) {
-				return ErrInvalidProvidedType.WithOptions(
+				return ErrInvalidProvidedType.WithOptions("E0568",
 					xerrors.NewOption("componego:dependency:container:factory", itemType),
 					xerrors.NewOption("componego:dependency:container:outType", outType),
 				)
@@ -208,7 +208,7 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 			// We add the current type to the rewrites if such a type already exists.
 			// If the position matches the position of the previous type, then the factory returns 2 or more identical objects.
 			if c.addRewriteToCheck(outType) == position {
-				return ErrSameDependencyType.WithOptions(
+				return ErrSameDependencyType.WithOptions("E0569",
 					xerrors.NewOption("componego:dependency:container:factory", itemType),
 					xerrors.NewOption("componego:dependency:container:outType", outType),
 				)
@@ -223,7 +223,7 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 		}
 	case reflect.Pointer:
 		if itemType.Elem().Kind() != reflect.Struct {
-			return ErrInvalidProvidedType.WithOptions(
+			return ErrInvalidProvidedType.WithOptions("E0570",
 				xerrors.NewOption("componego:dependency:container:providedType", itemType),
 			)
 		}
@@ -235,7 +235,7 @@ func (c *container) addNode(position int, item componego.Dependency) error {
 			position:     position,
 		}
 	default:
-		return ErrInvalidProvidedType.WithOptions(
+		return ErrInvalidProvidedType.WithOptions("E0571",
 			xerrors.NewOption("componego:dependency:container:providedType", itemType),
 		)
 	}
@@ -261,11 +261,11 @@ func (c *container) checkRewrites(nodes []*node) error {
 		if _, ok := c.rewritePositions[nodeObj.position]; !ok {
 			continue
 		} else if nodeObj.factory == nil {
-			return ErrIncorrectRewrite.WithOptions(
+			return ErrIncorrectRewrite.WithOptions("E0572",
 				xerrors.NewOption("componego:dependency:container:providedType", nodeObj.reflectType),
 			)
 		}
-		return ErrIncorrectRewrite.WithOptions(
+		return ErrIncorrectRewrite.WithOptions("E0573",
 			xerrors.NewOption("componego:dependency:container:factory", nodeObj.factory.value.Type()),
 		)
 	}

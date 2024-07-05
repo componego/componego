@@ -60,36 +60,3 @@ func (c *callableOption) Key() string {
 func (c *callableOption) Value() any {
 	return c.getValue()
 }
-
-func GetOptionValue[T any](optionKey string, err error) (T, bool) {
-	errors := UnwrapAll(err)
-	for _, err := range errors {
-		// noinspection ALL
-		xErr, ok := err.(XError) //nolint:errorlint
-		if !ok {
-			continue
-		}
-		for _, option := range xErr.Options() {
-			if option.Key() != optionKey {
-				continue
-			}
-			if typedValue, ok := option.Value().(T); ok {
-				return typedValue, true
-			}
-		}
-	}
-	return *new(T), false
-}
-
-func GetAllOptions(err error) []Option {
-	errors := UnwrapAll(err)
-	result := make([]Option, 0, len(errors)*2)
-	for _, err := range errors {
-		// noinspection ALL
-		xErr, ok := err.(XError) //nolint:errorlint
-		if ok {
-			result = append(result, xErr.Options()...)
-		}
-	}
-	return result
-}
