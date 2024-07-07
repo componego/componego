@@ -75,6 +75,9 @@ class TestEnvironment(TemporaryDirectory):
 
 import (
     "fmt"
+    "io"
+
+    "github.com/componego/componego/internal/system"
 
     _ "github.com/componego/meta-package/pre-init/vendor-proxy/for-app"
     _ "github.com/componego/meta-package/pre-init/vendor-proxy/for-tests"
@@ -83,6 +86,9 @@ import (
 func init() {
     // This is callback output, which is responsible for identifying the go test command.
     fmt.Println("[ID]")
+    // Disable console output of functions inside the framework.
+    system.Stdout = io.Discard
+    system.Stderr = io.Discard
 }
 """
     _env_id: str
