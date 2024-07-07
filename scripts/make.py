@@ -311,7 +311,7 @@ def fmt(args: Args) -> None:
 
 @Command
 def tests(args: Args) -> None:
-    args = Command.args(args, '-race -v -count=1 ./...')
+    args = Command.args(args, '-race -v -count=1 ./... -bench=.')
     with TestEnvironment() as (tempdir, env_id):
         run_tests('go test', args=args, src_dir=basedir(), dst_dir=tempdir, env_id=env_id)
 
@@ -370,6 +370,8 @@ def tests_env(_: Args) -> None:
                     return
                 if command == 'reinit':
                     break
+                if not command.strip():
+                    continue
                 try:
                     run_tests(command, args=None, src_dir=basedir(), dst_dir=tempdir, env_id=env_id)
                 except KeyboardInterrupt:
