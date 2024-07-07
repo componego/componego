@@ -30,7 +30,7 @@ var (
 	ErrNoEnvironmentInContext = xerrors.New("there is no environment in the context", "E0220")
 )
 
-type contextKey struct{}
+type ContextKey struct{}
 
 type environment struct {
 	mutex             sync.Mutex
@@ -63,7 +63,7 @@ func New(
 		componentProvider: componentProvider,
 		dependencyInvoker: dependencyInvoker,
 	}
-	env.context = context.WithValue(ctx, contextKey{}, env)
+	env.context = context.WithValue(ctx, ContextKey{}, env)
 	return env
 }
 
@@ -119,7 +119,7 @@ func (e *environment) DependencyInvoker() componego.DependencyInvoker {
 }
 
 func GetEnvironment(ctx context.Context) (componego.Environment, error) {
-	if env, ok := ctx.Value(contextKey{}).(componego.Environment); ok {
+	if env, ok := ctx.Value(ContextKey{}).(componego.Environment); ok {
 		return env, nil
 	}
 	return nil, ErrNoEnvironmentInContext
