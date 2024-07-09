@@ -30,7 +30,10 @@ import (
 	"github.com/componego/componego/internal/system"
 )
 
-type initializer = func(env componego.Environment, options any) error
+type (
+	initializer = func(env componego.Environment, options any) (canceller, error)
+	canceller   = func() error
+)
 
 type Options struct {
 	ConfigProviderFactory    func() (componego.ConfigProvider, initializer)
@@ -78,39 +81,39 @@ func Configure(options *Options) *Options {
 
 func newComponentProviderFactory() (componego.ComponentProvider, initializer) {
 	manager, initializer := component.NewManager()
-	return manager, func(env componego.Environment, _ any) error {
+	return manager, func(env componego.Environment, _ any) (canceller, error) {
 		components, err := component.ExtractComponents(env.Application())
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return initializer(components)
+		return nil, initializer(components)
 	}
 }
 
 func newDependencyInvokerFactory() (componego.DependencyInvoker, initializer) {
 	manager, initializer := dependency.NewManager()
-	return manager, func(env componego.Environment, _ any) error {
+	return manager, func(env componego.Environment, _ any) (canceller, error) {
 		dependencies, err := dependency.ExtractDependencies(env)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		containerInstance, containerInitializer := container.New(len(dependencies))
 		// There may be a recursive call to the container through the dependency manager
 		// during the initialization of dependencies inside the container.
 		if err = initializer(containerInstance); err != nil {
-			return err
+			return nil, err
 		}
-		return containerInitializer(dependencies)
+		return nil, containerInitializer(dependencies)
 	}
 }
 
 func newConfigFactory() (componego.ConfigProvider, initializer) {
 	manager, initializer := config.NewManager()
-	return manager, func(env componego.Environment, options any) error {
+	return manager, func(env componego.Environment, options any) (canceller, error) {
 		parsedConfig, err := config.ParseConfig(env, options)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		return initializer(env, parsedConfig)
+		return nil, initializer(env, parsedConfig)
 	}
 }

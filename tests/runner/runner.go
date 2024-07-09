@@ -18,6 +18,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"io"
 	"runtime"
 	"sync"
@@ -40,7 +41,7 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 	}
 	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
 	t.Cleanup(cancelCtx)
-	env, err := driver.New(options).CreateEnvironment(cancelableCtx, app, componego.TestMode)
+	env, cancelEnv, err := driver.New(options).CreateEnvironment(cancelableCtx, app, componego.TestMode)
 	if err != nil {
 		t.Errorf("error when creating an environment for the application: %s", err)
 		t.FailNow()
@@ -48,28 +49,26 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 	}
 	components := env.Components()
 	onStopActions := make([]stopAction, 0, len(components)+1)
-	mutexOnce := sync.Once{}
-	cancelEnv := func() {
-		// Cancellation occurs only once.
-		mutexOnce.Do(func() {
-			defer func() {
-				cancelCtx()
-				if err = driver.ErrorRecoveryOnStop(recover(), err); err != nil {
-					t.Errorf("error when stopping the application: %s", err)
-					t.FailNow()
-				}
-			}()
-			for _, action := range onStopActions {
-				// noinspection ALL
-				defer func(action stopAction) {
-					runtime.Gosched()
-					err = driver.ErrorRecoveryOnStop(recover(), err)
-					err = action(env, err)
-				}(action)
+	cancelAll := sync.OnceFunc(func() {
+		defer func() {
+			err = driver.ErrorRecoveryOnStop(recover(), err)
+			err = errors.Join(err, cancelEnv())
+			cancelCtx()
+			if err != nil {
+				t.Errorf("error when stopping the application: %s", err)
+				t.FailNow()
 			}
-		})
-	}
-	t.Cleanup(cancelEnv)
+		}()
+		for _, action := range onStopActions {
+			// noinspection ALL
+			defer func(action stopAction) {
+				runtime.Gosched()
+				err = driver.ErrorRecoveryOnStop(recover(), err)
+				err = action(env, err)
+			}(action)
+		}
+	})
+	t.Cleanup(cancelAll)
 	for _, component := range components {
 		if component, ok := component.(componego.ComponentInit); ok {
 			if err = component.ComponentInit(env); err != nil {
@@ -82,5 +81,5 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 			onStopActions = append(onStopActions, component.ComponentStop)
 		}
 	}
-	return env, cancelEnv
+	return env, cancelAll
 }

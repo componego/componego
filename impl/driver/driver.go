@@ -21,6 +21,7 @@ import (
 	"errors"
 	"reflect"
 	"runtime"
+	"sync"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/libs/debug"
@@ -39,7 +40,7 @@ type Driver interface {
 	// RunApplication launches the application.
 	RunApplication(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (int, error)
 	// CreateEnvironment creates a new environment for the application.
-	CreateEnvironment(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (componego.Environment, error)
+	CreateEnvironment(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (componego.Environment, canceller, error)
 }
 
 type driver struct {
@@ -60,8 +61,7 @@ func (d *driver) RunApplication(ctx context.Context, app componego.Application, 
 	defer func() {
 		cancelCtx()       // All contexts that were created from the main context will be closed on exit.
 		runtime.Gosched() // We switch the runtime so that waiting goroutines can complete their work.
-		// It converts the panic into an error with the current stack as an error option.
-		if err = ErrorRecoveryOnStop(recover(), err); err == nil {
+		if err == nil {   // All panics are caught in previous functions.
 			return
 		}
 		// We handle all application errors that were not previously handled.
@@ -74,19 +74,27 @@ func (d *driver) RunApplication(ctx context.Context, app componego.Application, 
 			exitCode = componego.ErrorExitCode
 		}
 	}()
-	if env, err := d.CreateEnvironment(cancelableCtx, app, appMode); err != nil {
-		return componego.ErrorExitCode, err
-	} else { //nolint:revive
-		return d.runInsideEnvironment(env)
+	env, cancelEnv, errEnv := d.CreateEnvironment(cancelableCtx, app, appMode)
+	if errEnv != nil {
+		return componego.ErrorExitCode, errEnv
 	}
+	defer func() {
+		// It converts the panic into an error with the current stack as an error option.
+		err = ErrorRecoveryOnStop(recover(), err)
+		err = errors.Join(err, cancelEnv())
+	}()
+	return d.runInsideEnvironment(env)
 }
 
 // CreateEnvironment creates a new environment for the application.
-func (d *driver) CreateEnvironment(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (env componego.Environment, err error) {
+func (d *driver) CreateEnvironment(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (env componego.Environment, cancelEnv canceller, err error) {
 	defer func() {
 		// This function should not return panic.
 		// Errors of goroutines running inside the environment must be processed in the places where they are launched.
-		err = ErrorRecoveryOnStop(recover(), err)
+		if err = ErrorRecoveryOnStop(recover(), err); err != nil {
+			err = errors.Join(err, cancelEnv())
+			cancelEnv = nil
+		}
 	}()
 	// One driver can run multiple applications. Therefore, we don't use managers directly.
 	// Each application will have its own instances of managers and environment.
@@ -98,16 +106,19 @@ func (d *driver) CreateEnvironment(ctx context.Context, app componego.Applicatio
 	env = d.options.EnvironmentFactory(
 		ctx, app, d.options.AppIO, appMode, configProvider, componentProvider, dependencyInvoker,
 	)
-	if err = configInitializer(env, d.options.Additional); err != nil {
-		return nil, err
+	// We notify environment managers about termination after a normal application shutdown or when an error occurs.
+	cancels := make([]canceller, 3)
+	cancelEnv = sync.OnceValue[error](joinCancels(cancels))
+	if cancels[0], err = configInitializer(env, d.options.Additional); err != nil {
+		return nil, cancelEnv, err
 	}
-	if err = componentsInitializer(env, d.options.Additional); err != nil {
-		return nil, err
+	if cancels[1], err = componentsInitializer(env, d.options.Additional); err != nil {
+		return nil, cancelEnv, err
 	}
-	if err = dependenciesInitializer(env, d.options.Additional); err != nil {
-		return nil, err
+	if cancels[2], err = dependenciesInitializer(env, d.options.Additional); err != nil {
+		return nil, cancelEnv, err
 	}
-	return env, nil
+	return env, cancelEnv, nil
 }
 
 func (d *driver) runInsideEnvironment(env componego.Environment) (exitCode int, err error) {
@@ -156,4 +167,26 @@ func ErrorRecoveryOnStop(recover any, prevErr error) (newErr error) {
 		return newErr
 	}
 	return errors.Join(prevErr, newErr)
+}
+
+func joinCancels(cancels []canceller) canceller {
+	return func() (err error) {
+		defer func() {
+			// This catches the error in the last called function.
+			err = ErrorRecoveryOnStop(recover(), err)
+		}()
+		// All functions will be called starting from the last function in the list.
+		// if an error occurs in any of the functions, it will be merged with other errors.
+		for _, cancel := range cancels {
+			if cancel == nil {
+				continue
+			}
+			// noinspection ALL
+			defer func(cancel canceller) {
+				err = ErrorRecoveryOnStop(recover(), err)
+				err = errors.Join(err, cancel())
+			}(cancel)
+		}
+		return err
+	}
 }
