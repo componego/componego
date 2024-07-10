@@ -149,7 +149,7 @@ func ErrorRecoveryOnStop(recover any, prevErr error) (newErr error) {
 		return prevErr
 	}
 	errOptions := []xerrors.Option{
-		xerrors.NewOption("componego:driver:panic:stack", debug.GetStackTrace()),
+		xerrors.NewOption("componego:driver:panic:stack", debug.GetStackTrace(1)),
 		xerrors.NewOption("componego:driver:panic:recover", recover),
 	}
 	// noinspection ALL

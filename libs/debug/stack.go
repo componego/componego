@@ -24,10 +24,10 @@ import (
 
 type StackTrace []uintptr
 
-func GetStackTrace() *StackTrace {
+func GetStackTrace(skip int) *StackTrace {
 	const depth = 32
 	var pcs [depth]uintptr
-	position := runtime.Callers(3, pcs[:])
+	position := runtime.Callers(2+skip, pcs[:])
 	var stackTrace StackTrace = pcs[0:position]
 	return &stackTrace
 }
