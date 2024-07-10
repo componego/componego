@@ -20,7 +20,7 @@ type redirectRepository struct {
 }
 
 func NewRedirectRepository(dbProvider database.Provider) (RedirectRepository, error) {
-	db, err := dbProvider.Get("main-storage")
+	db, err := dbProvider.GetConnection("main-storage")
 	if err != nil {
 		return nil, err
 	}

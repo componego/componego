@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS redirects (
 func Run(dbProvider database.Provider) error {
 	// Note that dependency 'dbProvider' is present in the application
 	// because we added a component to the application that provides that dependency.
-	db, err := dbProvider.Get("main-storage")
+	db, err := dbProvider.GetConnection("main-storage")
 	if err == nil {
 		_, err = db.Exec(sql)
 	}

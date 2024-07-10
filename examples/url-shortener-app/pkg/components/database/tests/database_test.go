@@ -15,7 +15,7 @@ func TestComponent(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		t.Parallel()
 		_, err := env.DependencyInvoker().Invoke(func(dbProvider database.Provider) error {
-			db, err := dbProvider.Get("test-storage")
+			db, err := dbProvider.GetConnection("test-storage")
 			if err != nil {
 				return err
 			}

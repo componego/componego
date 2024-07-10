@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"runtime"
 	"sync"
 
@@ -11,9 +12,9 @@ import (
 )
 
 type Provider interface {
-	Get(name string) (*sql.DB, error)
-	Create(name string) (*sql.DB, error)
-	Close(name string) error
+	GetConnection(name string) (*sql.DB, error)
+	CreateConnection(name string) (*sql.DB, error)
+	CloseConnection(name string) error
 }
 
 type provider struct {
@@ -22,16 +23,16 @@ type provider struct {
 	list  map[string]*sql.DB
 }
 
-func NewProvider(env componego.Environment) (Provider, func() error) {
+func NewProvider(env componego.Environment) Provider {
 	dbProvider := &provider{
 		mutex: sync.Mutex{},
 		env:   env,
 		list:  make(map[string]*sql.DB, 2),
 	}
-	return dbProvider, dbProvider.onApplicationStop
+	return dbProvider
 }
 
-func (p *provider) Get(name string) (*sql.DB, error) {
+func (p *provider) GetConnection(name string) (*sql.DB, error) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if p.list == nil {
@@ -40,7 +41,7 @@ func (p *provider) Get(name string) (*sql.DB, error) {
 		return nil, fmt.Errorf("you cannot create a connection to '%s'. Make sure the order of the components is correct", name)
 	} else if connection, ok := p.list[name]; ok {
 		return connection, nil
-	} else if connection, err := p.Create(name); err == nil {
+	} else if connection, err := p.CreateConnection(name); err == nil {
 		p.list[name] = connection
 		return connection, nil
 	} else { //nolint:revive
@@ -48,7 +49,7 @@ func (p *provider) Get(name string) (*sql.DB, error) {
 	}
 }
 
-func (p *provider) Create(name string) (db *sql.DB, err error) {
+func (p *provider) CreateConnection(name string) (db *sql.DB, err error) {
 	var driver, source string
 	if driver, err = getDriver(name, p.env); err != nil {
 		return nil, err
@@ -65,7 +66,7 @@ func (p *provider) Create(name string) (db *sql.DB, err error) {
 	return db, nil
 }
 
-func (p *provider) Close(name string) error {
+func (p *provider) CloseConnection(name string) error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	if connection, ok := p.list[name]; ok {
@@ -75,7 +76,7 @@ func (p *provider) Close(name string) error {
 	return fmt.Errorf("not found connection with name '%s'", name)
 }
 
-func (p *provider) onApplicationStop() error {
+func (p *provider) Close() error {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	errs := make([]error, 0, len(p.list))
@@ -88,3 +89,8 @@ func (p *provider) onApplicationStop() error {
 	runtime.Gosched()
 	return errors.Join(errs...)
 }
+
+var (
+	_ Provider  = (*provider)(nil)
+	_ io.Closer = (*provider)(nil)
+)

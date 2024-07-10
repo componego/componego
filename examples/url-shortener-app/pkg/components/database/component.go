@@ -1,8 +1,6 @@
 package database
 
 import (
-	"errors"
-
 	"github.com/componego/componego"
 
 	"github.com/componego/componego/examples/url-shortener-app/pkg/components/database/internal"
@@ -13,7 +11,6 @@ type (
 )
 
 type Component struct {
-	closeConnections func() error
 }
 
 func NewComponent() *Component {
@@ -33,24 +30,11 @@ func (c *Component) ComponentVersion() string {
 // ComponentDependencies belongs to interface componego.ComponentDependencies.
 func (c *Component) ComponentDependencies() ([]componego.Dependency, error) {
 	return []componego.Dependency{
-		func(env componego.Environment) Provider {
-			dbProvider, closeConnections := internal.NewProvider(env)
-			c.closeConnections = closeConnections
-			return dbProvider
-		},
+		internal.NewProvider,
 	}, nil
-}
-
-func (c *Component) ComponentStop(_ componego.Environment, prevErr error) error {
-	// We check that the function exists, since the function may not exist if the dependency has been replaced.
-	if c.closeConnections != nil {
-		return errors.Join(prevErr, c.closeConnections())
-	}
-	return prevErr
 }
 
 var (
 	_ componego.Component             = (*Component)(nil)
 	_ componego.ComponentDependencies = (*Component)(nil)
-	_ componego.ComponentStop         = (*Component)(nil)
 )
