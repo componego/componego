@@ -103,7 +103,7 @@ func newDependencyInvokerFactory() (componego.DependencyInvoker, initializer) {
 		if err = initializer(containerInstance); err != nil {
 			return nil, err
 		}
-		return nil, containerInitializer(dependencies)
+		return containerInitializer(dependencies)
 	}
 }
 

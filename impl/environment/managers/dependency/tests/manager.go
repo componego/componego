@@ -41,7 +41,7 @@ func DependencyManagerTester[T testing.TRun[T]](
 	diManager, initializeManager := factory()
 	diContainer, initializeContainer := container.New(5)
 	require.NoError(t, initializeManager(diContainer))
-	require.NoError(t, initializeContainer([]componego.Dependency{
+	closeContainer, err := initializeContainer([]componego.Dependency{
 		func() types.AInterface {
 			return aStruct1
 		},
@@ -53,7 +53,11 @@ func DependencyManagerTester[T testing.TRun[T]](
 				AStruct: aStruct,
 			}
 		},
-	}))
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, closeContainer())
+	})
 
 	t.Run("Invoke", func(t T) {
 		t.Run("nil argument", func(t T) {

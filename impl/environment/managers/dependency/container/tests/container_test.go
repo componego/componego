@@ -24,7 +24,7 @@ import (
 )
 
 func TestDependencyContainer(t *testing.T) {
-	DependencyContainerTester[*testing.T](t, func() (container.Container, func([]componego.Dependency) error) {
+	DependencyContainerTester[*testing.T](t, func() (container.Container, func([]componego.Dependency) (func() error, error)) {
 		return container.New(5)
 	})
 }
@@ -35,7 +35,7 @@ func BenchmarkDependencyContainerInitialize(b *testing.B) {
 		b.ReportAllocs()
 		for n := 0; n < b.N; n++ {
 			_, initializer := container.New(len(factories))
-			if err := initializer(factories); err != nil {
+			if _, err := initializer(factories); err != nil {
 				b.Fatal(err)
 			}
 		}

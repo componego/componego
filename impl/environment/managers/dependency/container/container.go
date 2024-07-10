@@ -17,6 +17,8 @@ limitations under the License.
 package container
 
 import (
+	"errors"
+	"io"
 	"reflect"
 	"sort"
 
@@ -47,9 +49,10 @@ type container struct {
 	nodes            map[reflect.Type]*node
 	initStack        []reflect.Type
 	rewritePositions map[int]struct{}
+	closers          []io.Closer
 }
 
-func New(approximateSize int) (Container, func([]componego.Dependency) error) {
+func New(approximateSize int) (Container, func([]componego.Dependency) (func() error, error)) {
 	c := &container{
 		nodes:     make(map[reflect.Type]*node, approximateSize),
 		initStack: make([]reflect.Type, 0, 10),
@@ -57,9 +60,9 @@ func New(approximateSize int) (Container, func([]componego.Dependency) error) {
 	return c, c.initialize
 }
 
-func (c *container) initialize(dependencies []componego.Dependency) error {
+func (c *container) initialize(dependencies []componego.Dependency) (func() error, error) {
 	if len(dependencies) == 0 {
-		return nil
+		return nil, nil
 	}
 	// List of positions of nodes that have been replaced.
 	// As a result, we should not have nodes with these positions.
@@ -67,7 +70,7 @@ func (c *container) initialize(dependencies []componego.Dependency) error {
 	for i, item := range dependencies {
 		// The index is the position of a node in the map of other nodes.
 		if err := c.addNode(i, item); err != nil {
-			return err
+			return nil, err
 		}
 	}
 	nodes := utils.Values(c.nodes)
@@ -77,16 +80,10 @@ func (c *container) initialize(dependencies []componego.Dependency) error {
 	})
 	// Here we check that the dependency rewrite was correct.
 	if err := c.checkRewrites(nodes); err != nil {
-		return err
+		return nil, err
 	}
 	c.rewritePositions = nil
-	// We initialize all values in one thread without multithreading to avoid race conditions and define cycles correctly.
-	for _, nodeObj := range nodes {
-		if err := c.initValue(nodeObj); err != nil {
-			return err
-		}
-	}
-	return nil
+	return c.initAllValues()
 }
 
 func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
@@ -98,6 +95,30 @@ func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
 	}
 	err := c.initValue(nodeObj)
 	return nodeObj.reflectValue, err
+}
+
+func (c *container) initAllValues() (closeAll func() error, err error) {
+	closeAll = func() error {
+		errs := make([]error, 0, len(c.closers))
+		for _, closer := range c.closers {
+			errs = append(errs, closer.Close())
+		}
+		return errors.Join(errs...)
+	}
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, closeAll())
+			closeAll = nil
+			c.nodes = nil
+		}
+	}()
+	// We initialize all values in one thread without multithreading to avoid race conditions and define cycles correctly.
+	for _, nodeObj := range c.nodes {
+		if err = c.initValue(nodeObj); err != nil {
+			return closeAll, err
+		}
+	}
+	return closeAll, nil
 }
 
 func (c *container) initValue(nodeObj *node) error {
@@ -155,6 +176,9 @@ func (c *container) initValue(nodeObj *node) error {
 		nodeObj.reflectValue = output[i]
 		// Here we mark the current value as initialized.
 		nodeObj.factory = nil
+		if closer, ok := nodeObj.reflectValue.Interface().(io.Closer); ok {
+			c.closers = append(c.closers, closer)
+		}
 	}
 	return nil
 }
