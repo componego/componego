@@ -21,9 +21,7 @@ import (
 	"io"
 )
 
-var (
-	themeFactories map[string]themeFactory
-)
+var themeFactories map[string]themeFactory
 
 func init() {
 	themeFactories = make(map[string]themeFactory, 5)

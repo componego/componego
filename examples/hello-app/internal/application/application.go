@@ -7,8 +7,7 @@ import (
 	"github.com/componego/componego/impl/application"
 )
 
-type Application struct {
-}
+type Application struct{}
 
 func New() *Application {
 	return &Application{}
@@ -25,6 +24,4 @@ func (a *Application) ApplicationAction(env componego.Environment, _ any) (int, 
 	return application.ExitWrapper(err)
 }
 
-var (
-	_ componego.Application = (*Application)(nil)
-)
+var _ componego.Application = (*Application)(nil)

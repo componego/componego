@@ -45,6 +45,8 @@ META_PACKAGE_VERSION: Final[str] = 'latest'
 GOSEC_VERSION: Final[str] = 'latest'
 # noinspection SpellCheckingInspection
 GOLANGCI_LINT_VERSION: Final[str] = 'latest'
+# noinspection SpellCheckingInspection
+GOFUMPT_VERSION: Final[str] = 'latest'
 
 LICENSE_HASH: Final[str] = 'f109dd29cfbafffd1d23caf22662462bb06a4a9d'
 
@@ -304,9 +306,12 @@ def upload_coverage(profile: str) -> None:
 
 
 @Command
-def fmt(args: Args) -> None:
-    args = Command.args(args, './...')
-    run_process('go fmt', args=args)
+def fmt(_: Args) -> None:
+    run_process('go fmt ./...')
+    # noinspection SpellCheckingInspection
+    Go.install('mvdan.cc/gofumpt', version=GOFUMPT_VERSION)
+    # noinspection SpellCheckingInspection
+    run_process(Go.bin('gofumpt'), args='-l -w .')
 
 
 @Command

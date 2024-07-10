@@ -10,8 +10,7 @@ type (
 	Provider = internal.Provider
 )
 
-type Component struct {
-}
+type Component struct{}
 
 func NewComponent() *Component {
 	return &Component{}

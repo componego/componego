@@ -19,8 +19,7 @@ func init() {
 	sql.Register("db-driver-mock", &dbDriver{})
 }
 
-type dbDriver struct {
-}
+type dbDriver struct{}
 
 func (d *dbDriver) Open(_ string) (driver.Conn, error) {
 	return &connection{

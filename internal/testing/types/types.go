@@ -53,6 +53,4 @@ func (c *CStruct) GetPrivateField() AInterface {
 	return c.privateField
 }
 
-var (
-	_ AInterface = (*AStruct)(nil)
-)
+var _ AInterface = (*AStruct)(nil)

@@ -17,8 +17,7 @@ import (
 	_ "github.com/componego/componego/examples/url-shortener-app/third_party/db-driver"
 )
 
-type Application struct {
-}
+type Application struct{}
 
 func New() *Application {
 	return &Application{}

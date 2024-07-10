@@ -27,7 +27,6 @@ func NewRedirectGetHandler(redirectRepository repository.RedirectRepository) htt
 
 func NewRedirectPutHandler(redirectRepository repository.RedirectRepository) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		type request struct {
 			Url string `json:"url"`
 		}

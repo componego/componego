@@ -51,9 +51,7 @@ const (
 	reset Color = 0
 )
 
-var (
-	_active = false // Colors are disabled by default
-)
+var _active = false // Colors are disabled by default
 
 func SetIsActive(active bool) {
 	_active = active
