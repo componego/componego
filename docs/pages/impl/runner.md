@@ -41,6 +41,8 @@ You can also use ^^runner.Run^^, which starts the application but does not exit 
     }
     ```
 
+There are also methods ^^RunWithContext^^ and ^^RunGracefullyAndExit^^, which allow you to run the application using a custom context or with a graceful shutdown.
+
 ## Application Mode
 
 As you can see, you can run the application in different modes.

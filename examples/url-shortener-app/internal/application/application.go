@@ -6,7 +6,6 @@ import (
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/application"
 	"github.com/componego/componego/impl/environment/managers/config"
-	"github.com/componego/componego/qcomponents/graceful-shutdown"
 
 	"github.com/componego/componego/examples/url-shortener-app/internal/migration"
 	"github.com/componego/componego/examples/url-shortener-app/internal/repository"
@@ -31,8 +30,6 @@ func (a *Application) ApplicationName() string {
 // ApplicationComponents belongs to interface componego.ApplicationComponents.
 func (a *Application) ApplicationComponents() ([]componego.Component, error) {
 	return []componego.Component{
-		// This component adds a graceful shutdown behavior to the application.
-		graceful_shutdown.NewComponent(),
 		// This is the custom component implemented in this example
 		// which provides access to the database using a standard database connection interface.
 		database.NewComponent(),

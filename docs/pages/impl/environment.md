@@ -74,45 +74,28 @@ This is a universal key for accessing any part of the application.
 ## Application Context
 
 It is recommended to use the application context to run various functions.
-You can also replace the current context with another context, but the new context must inherit from the previous main context.
-
-Let's create an example of a graceful shutdown [component](./component.md):
-    ```go hl_lines="16 27"
+You can also replace the current context with another context, but the new context must inherit from the previous main context:
+    ```go hl_lines="14 16"
     package component
 
     import (
         "context"
-        "os"
-        "os/signal"
-        "syscall"
+        "time"
 
         "github.com/componego/componego"
-        "github.com/componego/componego/impl/managers/component"
+        "github.com/componego/componego/impl/environment/managers/component"
     )
 
     func NewComponent() componego.Component {
-        factory := component.NewFactory("graceful-shutdown", "graceful-shutdown@example", "0.0.1")
+        factory := component.NewFactory("example", "0.0.1")
         factory.SetComponentInit(func(env componego.Environment) error {
-            ctx, cancel := context.WithCancel(env.GetContext())
-            interruptChan := make(chan os.Signal, 1)
-            signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
-            go func() {
-                select {
-                case <-interruptChan:
-                case <-ctx.Done():
-                    signal.Stop(interruptChan)
-                }
-                cancel()
-            }()
+            ctx, cancelCtx := context.WithTimeout(env.GetContext(), time.Second*100)
+            // ...
             return env.SetContext(ctx)
         })
         return factory.Build()
     }
     ```
-
-Components functions and how to create them are described on the [next documentation page](./component.md).
-
-The framework is also provide a [graceful shutdown component](../qcomponents/graceful-shutdown.md), created according to the same example.
 
 ## Application IO
 

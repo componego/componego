@@ -167,8 +167,6 @@ nav:
   - Testing:
       - Application Mock: tests/mock.md
       - Tests Runner: tests/runner.md
-  - Built-in Components:
-      - Graceful-Shutdown: qcomponents/graceful-shutdown.md
   - Examples:
       - Hello World: https://github.com/componego/componego/tree/master/examples/hello-app
       - URL Shortener: https://github.com/componego/componego/tree/master/examples/url-shortener-app

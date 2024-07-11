@@ -12,5 +12,5 @@ func main() {
 	// This enables color text output.
 	color.SetIsActive(true)
 	// This is an entry point for launching the application in developer mode.
-	runner.RunAndExit(application.New(), componego.DeveloperMode)
+	runner.RunGracefullyAndExit(application.New(), componego.DeveloperMode)
 }

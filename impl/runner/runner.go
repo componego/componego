@@ -18,6 +18,9 @@ package runner
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/driver"
@@ -27,10 +30,10 @@ import (
 	"github.com/componego/componego/internal/utils"
 )
 
-// Run runs the application.
-func Run(app componego.Application, appMode componego.ApplicationMode) int {
+// RunWithContext runs the application with context and returns the exit code.
+func RunWithContext(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) int {
 	d := driver.New(nil)
-	exitCode, err := d.RunApplication(context.Background(), app, appMode)
+	exitCode, err := d.RunApplication(ctx, app, appMode)
 	if err != nil {
 		// Here we display all errors that were not processed.
 		utils.Fprint(system.Stderr, unhandled_errors.ToString(err, appMode, unhandled_errors.GetHandlers()))
@@ -38,9 +41,35 @@ func Run(app componego.Application, appMode componego.ApplicationMode) int {
 	return exitCode
 }
 
+// Run runs the application and returns the exit code.
+func Run(app componego.Application, appMode componego.ApplicationMode) int {
+	return RunWithContext(context.Background(), app, appMode)
+}
+
 // RunAndExit runs the application and exits the program after stopping the application.
 func RunAndExit(app componego.Application, appMode componego.ApplicationMode) {
 	exitCode := Run(app, appMode)
+	exit(exitCode, appMode)
+}
+
+// RunGracefullyAndExit runs the application and stops it gracefully.
+func RunGracefullyAndExit(app componego.Application, appMode componego.ApplicationMode) {
+	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
+	interruptChan := make(chan os.Signal, 1)
+	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		select {
+		case <-interruptChan:
+		case <-cancelableCtx.Done():
+			signal.Stop(interruptChan)
+		}
+		cancelCtx()
+	}()
+	exitCode := RunWithContext(cancelableCtx, app, appMode)
+	exit(exitCode, appMode)
+}
+
+func exit(exitCode int, appMode componego.ApplicationMode) {
 	if appMode == componego.DeveloperMode && system.NumGoroutineBeforeExit() > 1 {
 		// In any case, all goroutines will be terminated after exiting the application, but we will show this message.
 		developer.Warning(system.Stdout, "The application was stopped, but goroutines were still running.")

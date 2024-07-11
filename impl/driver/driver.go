@@ -57,9 +57,7 @@ func New(options *Options) Driver {
 
 // RunApplication launches the application.
 func (d *driver) RunApplication(ctx context.Context, app componego.Application, appMode componego.ApplicationMode) (exitCode int, err error) {
-	cancelableCtx, cancelCtx := context.WithCancel(ctx)
 	defer func() {
-		cancelCtx()       // All contexts that were created from the main context will be closed on exit.
 		runtime.Gosched() // We switch the runtime so that waiting goroutines can complete their work.
 		if err == nil {   // All panics are caught in previous functions.
 			return
@@ -74,7 +72,7 @@ func (d *driver) RunApplication(ctx context.Context, app componego.Application, 
 			exitCode = componego.ErrorExitCode
 		}
 	}()
-	env, cancelEnv, errEnv := d.CreateEnvironment(cancelableCtx, app, appMode)
+	env, cancelEnv, errEnv := d.CreateEnvironment(ctx, app, appMode)
 	if errEnv != nil {
 		return componego.ErrorExitCode, errEnv
 	}

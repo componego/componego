@@ -9,5 +9,5 @@ import (
 
 func main() {
 	// This is an entry point for launching the application in production mode.
-	runner.RunAndExit(application.New(), componego.ProductionMode)
+	runner.RunGracefullyAndExit(application.New(), componego.ProductionMode)
 }

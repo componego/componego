@@ -39,9 +39,7 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 		// Ignore output. We don't need output during the test.
 		options.AppIO = application.NewIO(nil, io.Discard, io.Discard)
 	}
-	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
-	t.Cleanup(cancelCtx)
-	env, cancelEnv, err := driver.New(options).CreateEnvironment(cancelableCtx, app, componego.TestMode)
+	env, cancelEnv, err := driver.New(options).CreateEnvironment(context.Background(), app, componego.TestMode)
 	if err != nil {
 		t.Errorf("error when creating an environment for the application: %s", err)
 		t.FailNow()
@@ -53,7 +51,6 @@ func CreateTestEnvironment(t testing.T, app componego.Application, options *driv
 		defer func() {
 			err = driver.ErrorRecoveryOnStop(recover(), err)
 			err = errors.Join(err, cancelEnv())
-			cancelCtx()
 			if err != nil {
 				t.Errorf("error when stopping the application: %s", err)
 				t.FailNow()
