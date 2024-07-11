@@ -118,7 +118,8 @@ import (
 
 func main() {
     // This is an entry point for launching the application in production mode.
-    runner.RunAndExit(application.New(), componego.ProductionMode)
+    runner.RunGracefullyAndExit(application.New(), componego.ProductionMode)
+    // or you can use runner.Run, RunAndExit, or runner.RunWithContext.
 }
 EOF
 
@@ -137,7 +138,8 @@ import (
 func main() {
     color.SetIsActive(true)
     // This is an entry point for launching the application in developer mode.
-    runner.RunAndExit(application.New(), componego.DeveloperMode)
+    runner.RunGracefullyAndExit(application.New(), componego.DeveloperMode)
+    // or you can use runner.Run, RunAndExit, or runner.RunWithContext.
 }
 EOF
 
