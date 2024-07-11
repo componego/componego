@@ -27,6 +27,9 @@ and allows you to reuse it in your other applications. Of course, you don’t ne
 
 Visit our website to learn more: [componego.github.io](https://componego.github.io/).
 
+Documentation is active for the latest version of the framework.
+Please update your version to [the latest](https://github.com/componego/componego/releases).
+
 ### Examples
 
 You can find some examples [here](./examples).
