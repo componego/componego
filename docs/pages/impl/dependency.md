@@ -137,6 +137,9 @@ Most likely you will rarely use this method.
 !!! note
     Loops between dependencies are not allowed. You will receive an error message when starting the application if a loop occurs.
 
+!!! note
+    If the provided object implements the ^^io.Closer^^ interface, then the ^^Close()^^ function will be called when the application stops.
+
 ## Access to Dependencies
 
 Dependencies can be obtained in several ways. The easiest way is to use the [environment](./environment.md).
