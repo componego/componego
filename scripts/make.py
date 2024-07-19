@@ -171,7 +171,13 @@ class Go:
 
     @classmethod
     def install(cls, package: str, version: str) -> None:
-        if path.exists(cls.bin(path.basename(package))):
+        binary_name = path.basename(package)
+        if path.exists(cls.bin(binary_name)):
+            return
+        cached_file = path.join(path.expanduser('~'), '.cache', 'componego', 'bin', binary_name)
+        if is_ci_cd_pipeline() and path.exists(cached_file):
+            print(f'install from cache: {package}')
+            copy(cached_file, cls.bin(binary_name))
             return
         package = f'{package}@{version}'
         print(f'install: {package}')
@@ -180,6 +186,9 @@ class Go:
             # noinspection SpellCheckingInspection
             env = environ | {'GOBIN': cls.bin()}
             run_process('go install', args=package, cwd=tempdir, env=env)
+        if is_ci_cd_pipeline():
+            makedirs(path.dirname(cached_file), exist_ok=True)
+            copy(cls.bin(binary_name), cached_file)
 
     @classmethod
     def get(cls, package: str, version: str, cwd: str = None) -> None:
@@ -233,7 +242,7 @@ def basedir() -> str:
     return path.dirname(path.dirname(path.realpath(__file__)))
 
 
-def run_tests(cmd: str, args: Args | None, src_dir: str, dst_dir: str, env_id: str):
+def run_tests(cmd: str, args: Args | None, src_dir: str, dst_dir: str, env_id: str) -> None:
     read, write = pipe()
 
     def pipe_reader():
