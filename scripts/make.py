@@ -18,7 +18,7 @@
 
 # pylint make.py --disable=C0116,C0115,W0511 --max-line-length=120
 
-from sys import version_info, exit, stdout, argv  # pylint: disable=redefined-builtin
+from sys import version_info, exit, stdout, argv, executable  # pylint: disable=redefined-builtin
 
 if version_info < (3, 10):
     print('This script supports Python 3.10 or later.')
@@ -28,7 +28,7 @@ if version_info < (3, 10):
 
 from os import path, environ, makedirs, symlink, sep as path_separator, fdopen, close, pipe
 from tempfile import TemporaryDirectory
-from subprocess import run as runprocess, SubprocessError
+from subprocess import run as runprocess, SubprocessError, PIPE as SUBPROCESS_PIPE, Popen
 from glob import iglob, glob
 from shutil import copy, move as rename
 from typing import TypeAlias, Final, Callable, IO, Any
@@ -37,6 +37,7 @@ from atexit import register as on_exit
 from uuid import uuid4
 from hashlib import sha1
 from re import search as re_search
+from concurrent import futures as concurrent
 
 # pylint: enable=wrong-import-position
 
@@ -305,6 +306,32 @@ def upload_coverage(profile: str) -> None:
         copy(profile, path.join(basedir(), TEST_COVERAGE_FILE))
 
 
+def run_parallel_commands(commands: list[str]) -> None:
+    def run_command(command: str) -> tuple[str, str, int]:
+        print('> run in parallel >', command)
+        command = [executable, path.realpath(__file__), command]
+        with Popen(command, stdout=SUBPROCESS_PIPE, stderr=SUBPROCESS_PIPE) as process:
+            process_stdout, process_stderr = process.communicate()
+            return process_stdout.decode('utf-8'), process_stderr.decode('utf-8'), process.returncode
+
+    results: dict[str, tuple[str, str, int]] = {}
+    with concurrent.ThreadPoolExecutor(max_workers=len(commands)) as executor:
+        futures = {executor.submit(run_command, command): command for command in commands}
+        print('> wait for results....')
+        for future in futures:
+            results[futures[future]] = future.result()
+
+    for command in commands:
+        if command not in results:
+            continue
+        result = results[command]
+        print(result[0])
+        if result[1]:
+            print(result[1])
+        if result[2] != 0:
+            raise SubprocessError(f'exit code: {result[2]}')
+
+
 @Command
 def fmt(_: Args) -> None:
     run_process('go fmt ./...')
@@ -316,7 +343,8 @@ def fmt(_: Args) -> None:
 
 @Command
 def tests(args: Args) -> None:
-    args = Command.args(args, '-race -v -count=1 ./... -bench=.')
+    # noinspection SpellCheckingInspection
+    args = Command.args(args, '-race -v -count=1 ./... -bench=. -benchtime=1x')
     with TestEnvironment() as (tempdir, env_id):
         run_tests('go test', args=args, src_dir=basedir(), dst_dir=tempdir, env_id=env_id)
 
@@ -464,12 +492,7 @@ def github_actions(_: Args) -> None:
     except SubprocessError as e:
         run_process('git --no-pager diff', cwd=basedir())
         raise e
-    tests(no_args)
-    test_skeleton(no_args)
-    security(no_args)
-    lint(no_args)
-    license_check(no_args)
-    tests_cover(no_args)
+    run_parallel_commands(['tests', 'test:skeleton', 'security', 'lint', 'license:check', 'tests:cover'])
 
 
 @Command
