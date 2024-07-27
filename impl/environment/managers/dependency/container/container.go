@@ -20,6 +20,7 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"runtime"
 	"sort"
 
 	"github.com/componego/componego"
@@ -83,7 +84,7 @@ func (c *container) initialize(dependencies []componego.Dependency) (func() erro
 		return nil, err
 	}
 	c.rewritePositions = nil
-	return c.initAllValues()
+	return c.initAllValues(nodes)
 }
 
 func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
@@ -97,28 +98,40 @@ func (c *container) GetValue(itemType reflect.Type) (reflect.Value, error) {
 	return nodeObj.reflectValue, err
 }
 
-func (c *container) initAllValues() (closeAll func() error, err error) {
-	closeAll = func() error {
+func (c *container) initAllValues(nodes []*node) (closeAll func() error, err error) {
+	closeAll = func() (err error) {
 		errs := make([]error, 0, len(c.closers))
+		defer func() {
+			err = errors.Join(errs...)
+		}()
 		for _, closer := range c.closers {
-			errs = append(errs, closer.Close())
+			// All dependencies that were obtained at the time this function was called will be closed in the correct order.
+			// We use a deferred call because there may be panic.
+			// noinspection ALL
+			defer func(closer io.Closer) {
+				errs = append(errs, closer.Close())
+				runtime.Gosched() // We switch the runtime so that waiting goroutines can complete their work.
+			}(closer)
 		}
-		return errors.Join(errs...)
+		return err
 	}
+	panicked := true
 	defer func() {
-		if err != nil {
+		if panicked || err != nil {
+			c.nodes = nil
 			err = errors.Join(err, closeAll())
 			closeAll = nil
-			c.nodes = nil
 		}
 	}()
 	// We initialize all values in one thread without multithreading to avoid race conditions and define cycles correctly.
-	for _, nodeObj := range c.nodes {
+	for _, nodeObj := range nodes {
 		if err = c.initValue(nodeObj); err != nil {
 			return closeAll, err
 		}
 	}
-	return closeAll, nil
+	// Save the stack trace and make sure there is no panic.
+	panicked = false
+	return closeAll, err
 }
 
 func (c *container) initValue(nodeObj *node) error {
