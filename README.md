@@ -25,6 +25,8 @@ and allows you to reuse it in your other applications. Of course, you don’t ne
 
 ### Documentation
 
+Introduction: [medium.com/@konstanchuk/25bfd16a97a9](https://medium.com/@konstanchuk/25bfd16a97a9).
+
 Visit our website to learn more: [componego.github.io](https://componego.github.io/).
 
 Documentation is active for the latest version of the framework.
