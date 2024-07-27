@@ -20,6 +20,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 
 	"github.com/componego/componego"
@@ -55,6 +56,7 @@ func RunAndExit(app componego.Application, appMode componego.ApplicationMode) {
 // RunGracefullyAndExit runs the application and stops it gracefully.
 func RunGracefullyAndExit(app componego.Application, appMode componego.ApplicationMode) {
 	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
+	defer cancelCtx() // This will cancel the context if panic occurs.
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -66,6 +68,8 @@ func RunGracefullyAndExit(app componego.Application, appMode componego.Applicati
 		cancelCtx()
 	}()
 	exitCode := RunWithContext(cancelableCtx, app, appMode)
+	cancelCtx()       // This will cancel the context unless panic occurs.
+	runtime.Gosched() // We switch the runtime so that waiting goroutines can complete their work.
 	exit(exitCode, appMode)
 }
 
