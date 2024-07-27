@@ -462,7 +462,9 @@ def validate_dependencies(_: Args) -> None:
     Go.tidy(basedir())
     # noinspection SpellCheckingInspection
     gosum = path.join(basedir(), 'go.sum')
-    if path.exists(gosum) and path.getsize(gosum) > 0:
+    if not path.exists(gosum):
+        raise FileNotFoundError('go.sum not found in the repository')
+    if path.getsize(gosum) > 0:
         # noinspection SpellCheckingInspection
         raise ValueError('componego has dependencies but shouldn\'t')
 

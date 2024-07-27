@@ -28,6 +28,3 @@ vendor/
 venv/
 __pycache__
 **/__pycache__
-
-# These files are excluded because the package must not have dependencies
-go.sum
