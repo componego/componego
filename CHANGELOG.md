@@ -1,3 +1,10 @@
+## 0.1.0 (July 27, 2024)
+
+* All interfaces are stable now and will no longer be changed.
+* Improved the graceful shutdown.
+* Fixed dependency closing order.
+* Increased GitHub Action speed.
+
 ## 0.0.3 (July 8, 2024)
 
 * The graceful shutdown component was replaced with various application launch functions.
