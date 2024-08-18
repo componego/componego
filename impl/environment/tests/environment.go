@@ -30,6 +30,8 @@ import (
 	"github.com/componego/componego/internal/testing/require"
 )
 
+type testCtxKey struct{}
+
 func EnvironmentTester[T testing.TRun[T]](
 	t testing.TRun[T],
 	factory func(
@@ -54,8 +56,9 @@ func EnvironmentTester[T testing.TRun[T]](
 	require.NoError(t, componentsInitializer(components))
 	dependencyInvoker, _ := dependency.NewManager()
 
+	ctxKey := testCtxKey{}
+
 	t.Run("get objects", func(t T) {
-		ctxKey := struct{}{}
 		ctx := context.WithValue(context.Background(), ctxKey, 123)
 		env := factory(ctx, app, appIO, appMode, configProvider, componentProvider, dependencyInvoker)
 		require.Same(t, app, env.Application())
@@ -73,7 +76,7 @@ func EnvironmentTester[T testing.TRun[T]](
 		require.ErrorIs(t, err, environment.ErrInvalidParentContext)
 		err = env.SetContext(env.GetContext())
 		require.NoError(t, err)
-		err = env.SetContext(context.WithValue(env.GetContext(), struct{}{}, 321))
+		err = env.SetContext(context.WithValue(env.GetContext(), ctxKey, 321))
 		require.NoError(t, err)
 	})
 
