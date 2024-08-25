@@ -17,6 +17,15 @@ The main rules for making changes to the codebase are as follows:
 4. Before creating a pull request or merge to our repository, please do a ^^git rebase^^.
 5. The language of communication is English. All commits, comments, tasks, and questions must be written in English.
 
+You can use the following command to quickly create a framework contributor environment:
+```shell
+curl -sSL https://raw.githubusercontent.com/componego/componego/master/tools/create-contributor-env.sh | sh
+```
+or
+```shell
+wget -O - https://raw.githubusercontent.com/componego/componego/master/tools/create-contributor-env.sh | sh
+```
+
 <hr/>
 
 If you like our framework, you can tell your friends about it, which will help this project develop further.

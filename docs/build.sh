@@ -5,7 +5,7 @@ set -o nounset
 
 cd "$(dirname "$(realpath -- "$0")")";
 
-docker-compose run --entrypoint "poetry run mkdocs build --clean --site-dir=/docs/build" docs
+docker-compose run --entrypoint "poetry run mkdocs build --clean --site-dir=/docs/build" componego-framework-docs
 
 cp ../LICENSE ./build/LICENSE
 if [ -e "../NOTICE" ]; then

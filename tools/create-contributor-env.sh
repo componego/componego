@@ -42,20 +42,14 @@ services:
     build:
       context: .
       dockerfile: src/componego/scripts/Dockerfile
-    container_name: componego-framework-container
+    container_name: componego-framework
     working_dir: /go/src/github.com/componego
     volumes:
       - ./src:/go/src/github.com/componego:cached
   componego-framework-docs:
-    build:
-      context: ./src/componego/docs/
-      dockerfile: Dockerfile
-    container_name: componego-framework-docs
-    working_dir: /docs
-    volumes:
-      - ./src/componego/docs:/docs:cached
-    ports:
-      - "8123:8123"
+    extends:
+      file: ./src/componego/docs/docker-compose.yml
+      service: componego-framework-docs
 EOF
 
 cat >.gitattributes <<EOF
@@ -77,7 +71,11 @@ cat >.gitignore <<EOF
 **/.DS_Store
 
 # Source code
-src/
+!src/
+src/*
+!src/README.md
+!src/dirty-tests/
+!src/go.work
 EOF
 
 cat >.editorconfig <<EOF
@@ -101,10 +99,38 @@ indent_style = tab
 insert_final_newline = false
 EOF
 
-mkdir -p "src"
+mkdir -p .devcontainer
+cat >.devcontainer/devcontainer.json <<EOF
+// Please refer to the documentation to configure the Dev Container for you.
+// https://github.com/microsoft/vscode-remote-try-go
+{
+  "name": "Componego Contributor Dev Container",
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+  "service": "componego-framework",
+  "workspaceFolder": "/go/src/github.com/componego",
+  "customizations": {}
+}
+EOF
+
+mkdir -p src
 cat >src/README.md <<EOF
-This folder contains repositories.
-If it is empty, follow the instructions provided after you create this environment.
+# Workspace Overview
+
+This is a place for development. You can clone any repository into this folder.
+
+## Workspace Initialization
+
+Run in the folder where this README file is located:
+\`\`\`shell
+go work init
+\`\`\`
+Add each package (repository) to the workspace list:
+\`\`\`shell
+go work use componego
+\`\`\`
+More information is available [here](https://go.dev/doc/tutorial/workspaces).
 EOF
 
 COMMAND_COLOR="\033[0;31m"
@@ -116,8 +142,8 @@ echo ">$"
 echo ">$ ${COMMAND_COLOR}cd $(pwd)${RESET_COLOR}"
 echo ">$ ${COMMAND_COLOR}git clone https://github.com/componego/componego.git src/componego${RESET_COLOR} # replace repo with your fork if your have one"
 echo ">$ ${COMMAND_COLOR}docker-compose up componego-framework -d${RESET_COLOR} # start docker container in background"
-echo ">$ ${COMMAND_COLOR}docker inspect --format '{{json .State.Running}}' componego-framework-container${RESET_COLOR} # check if docker container is running"
-echo ">$ ${COMMAND_COLOR}docker exec -ti componego-framework-container /bin/bash${RESET_COLOR} # open terminal inside docker container"
+echo ">$ ${COMMAND_COLOR}docker inspect --format '{{json .State.Running}}' componego-framework${RESET_COLOR} # check if docker container is running"
+echo ">$ ${COMMAND_COLOR}docker exec -ti componego-framework /bin/bash${RESET_COLOR} # open terminal inside docker container"
 echo ">$ ${COMMAND_COLOR}cd componego${RESET_COLOR} # change folder inside docker container"
 echo ">$ ${COMMAND_COLOR}make tests${RESET_COLOR} # run tests inside docker container"
 echo ">$"

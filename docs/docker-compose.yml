@@ -1,11 +1,11 @@
 version: '3.8'
 
 services:
-  docs:
+  componego-framework-docs:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: componego-docs
+    container_name: componego-framework-docs
     working_dir: /docs
     volumes:
       - .:/docs:cached
