@@ -69,7 +69,7 @@ func (m *manager) initialize(components []componego.Component) error {
 					parent = parent.parent
 					continue
 				}
-				cyclicDependencyProvider := getCyclicDependencyProvider(oldItem)
+				cyclicDependencyProvider := getCyclicDependencyProvider(item)
 				return ErrCyclicDependencies.WithOptions("E0412",
 					xerrors.NewCallableOption("component:cyclicDependencies", cyclicDependencyProvider),
 				)
@@ -124,15 +124,13 @@ func ExtractComponents(app componego.Application) ([]componego.Component, error)
 func getCyclicDependencyProvider(stackItem *stackItem) func() any {
 	return func() any {
 		components := make([]componego.Component, 0, 5)
-		parent := stackItem.parent
-		for parent != nil {
+		components = append(components, stackItem.component)
+		for parent := stackItem.parent; parent != nil; parent = parent.parent {
 			components = append(components, parent.component)
 			if parent.identifier == stackItem.identifier {
 				break
 			}
-			parent = parent.parent
 		}
-		components = append(components, stackItem.component)
 		utils.Reverse(components)
 		return components
 	}

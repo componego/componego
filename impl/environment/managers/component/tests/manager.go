@@ -17,138 +17,472 @@ limitations under the License.
 package tests
 
 import (
+	"errors"
+
 	"github.com/componego/componego"
 	"github.com/componego/componego/impl/environment/managers/component"
 	"github.com/componego/componego/internal/testing"
 	"github.com/componego/componego/internal/testing/require"
 )
 
-func ComponentManagerTester[T testing.T](
-	t testing.TRun[T],
-	factory func() (componego.ComponentProvider, func([]componego.Component) error),
+type (
+	managerFactory = func() (componego.ComponentProvider, func([]componego.Component) error)
+)
+
+func ComponentManagerTester[T testing.TRun[T]](
+	t T,
+	factory managerFactory,
 ) {
-	redLevel10 := component.NewFactory("red", "red:1.0")
-	redLevel10.SetComponentComponents(func() ([]componego.Component, error) {
-		greenLevel20 := component.NewFactory("green", "green:2.0")
-		greenLevel20.SetComponentComponents(func() ([]componego.Component, error) {
-			blueLevel30 := component.NewFactory("blue", "blue:3.0")
-			purpleLevel30 := component.NewFactory("purple", "purple:3.0")
-			return []componego.Component{
-				blueLevel30.Build(),
-				purpleLevel30.Build(),
-			}, nil
+	t.Run("components without dependent components", func(t T) {
+		initAndCompareComponents(t, factory, []treeItem{
+			{
+				name:    "component1",
+				version: "0.0.1",
+			},
+			{
+				name:    "component2",
+				version: "0.0.2",
+			},
+			{
+				name:    "component3",
+				version: "0.0.3",
+			},
+		}, []string{
+			"component1@0.0.1",
+			"component2@0.0.2",
+			"component3@0.0.3",
+		}, nil)
+	})
+
+	t.Run("empty component list", func(t T) {
+		initAndCompareComponents(t, factory, nil, nil, nil)
+	})
+
+	t.Run("components with dependent components", func(t T) {
+		t.Run("one level", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+						},
+						{
+							name:    "component5",
+							version: "0.0.1",
+						},
+					},
+				},
+				{
+					name:    "component6",
+					version: "0.0.1",
+				},
+			}, []string{
+				"component2@0.0.1",
+				"component5@0.0.1",
+				"component1@0.0.1",
+				"component6@0.0.1",
+			}, nil)
 		})
-		orangeLevel20 := component.NewFactory("orange", "orange:2.0")
-		orangeLevel20.SetComponentComponents(func() ([]componego.Component, error) {
-			purpleLevel31 := component.NewFactory("purple", "purple:3.1")
-			return []componego.Component{
-				purpleLevel31.Build(),
-			}, nil
+
+		t.Run("two levels", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+							children: []treeItem{
+								{
+									name:    "component3",
+									version: "0.0.1",
+								},
+								{
+									name:    "component4",
+									version: "0.0.1",
+								},
+							},
+						},
+						{
+							name:    "component5",
+							version: "0.0.1",
+						},
+					},
+				},
+				{
+					name:    "component6",
+					version: "0.0.1",
+				},
+			}, []string{
+				"component3@0.0.1",
+				"component4@0.0.1",
+				"component2@0.0.1",
+				"component5@0.0.1",
+				"component1@0.0.1",
+				"component6@0.0.1",
+			}, nil)
 		})
-		return []componego.Component{
-			greenLevel20.Build(),
-			orangeLevel20.Build(),
-		}, nil
+
+		t.Run("three levels", func(t T) {
+			// This is the same as two levels test, but with a new components.
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+							children: []treeItem{
+								{
+									name:    "component3",
+									version: "0.0.1",
+									children: []treeItem{
+										{
+											name:    "component7", // new component
+											version: "0.0.1",
+										},
+									},
+								},
+								{
+									name:    "component4",
+									version: "0.0.1",
+								},
+							},
+						},
+						{
+							name:    "component5",
+							version: "0.0.1",
+						},
+					},
+				},
+				{
+					name:    "component6",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component9", // new component
+							version: "0.0.1",
+						},
+					},
+				},
+			}, []string{
+				"component7@0.0.1", // new value
+				"component3@0.0.1",
+				"component4@0.0.1",
+				"component2@0.0.1",
+				"component5@0.0.1",
+				"component1@0.0.1",
+				"component9@0.0.1", // new value
+				"component6@0.0.1",
+			}, nil)
+		})
 	})
-	purpleLevel10 := component.NewFactory("purple", "purple:1.0")
-	orangeLevel10 := component.NewFactory("orange", "orange:1.0")
-	orangeLevel10.SetComponentComponents(func() ([]componego.Component, error) {
-		purpleLevel20 := component.NewFactory("purple", "purple:2.0")
-		return []componego.Component{
-			purpleLevel20.Build(),
-		}, nil
+
+	t.Run("replace components", func(t T) {
+		t.Run("simple replace", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+				},
+				{
+					name:    "component1", // replace component1@0.0.1
+					version: "0.0.2",
+				},
+			}, []string{
+				"component1@0.0.2",
+			}, nil)
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.2",
+				},
+				{
+					name:    "component1", // replace component1@0.0.2
+					version: "0.0.1",
+				},
+			}, []string{
+				"component1@0.0.1",
+			}, nil)
+		})
+
+		t.Run("replace with children", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+						},
+					},
+				},
+				{
+					name:    "component1", // replace component1@0.0.1
+					version: "0.0.2",
+				},
+			}, []string{
+				"component1@0.0.2",
+			}, nil)
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.2",
+				},
+				{
+					name:    "component1", // replace
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+						},
+						{
+							name:    "component2", // replace component2@0.0.1
+							version: "0.0.2",
+						},
+					},
+				},
+			}, []string{
+				"component2@0.0.2",
+				"component1@0.0.1",
+			}, nil)
+		})
+
+		t.Run("replace child components", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.2",
+						},
+					},
+				},
+				{
+					name:    "component2", // replace component2@0.0.2
+					version: "0.0.3",
+				},
+			}, []string{
+				"component2@0.0.3",
+				"component1@0.0.1",
+			}, nil)
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+							children: []treeItem{
+								{
+									name:    "component3",
+									version: "0.0.1",
+								},
+							},
+						},
+						{
+							name:    "component3", // replace component3@0.0.1
+							version: "0.0.2",
+							children: []treeItem{
+								{
+									name:    "component4",
+									version: "0.0.1",
+								},
+							},
+						},
+					},
+				},
+				{
+					name:    "component4", // replace component4@0.0.1
+					version: "0.0.2",
+				},
+				{
+					name:    "component5",
+					version: "0.0.1",
+				},
+			}, []string{
+				"component4@0.0.2",
+				"component3@0.0.2",
+				"component2@0.0.1",
+				"component1@0.0.1",
+				"component5@0.0.1",
+			}, nil)
+		})
 	})
-	// run tests
-	t.Run("test 1", func(t T) {
-		manager, initializer := factory()
-		require.NoError(t, initializer([]componego.Component{
-			redLevel10.Build(),
-			purpleLevel10.Build(),
-			orangeLevel10.Build(),
-		}))
-		// todo: improve the list. We need to add lists for different manager implementations.
-		require.Equal(t, []string{
-			"blue:3.0",
-			"purple:2.0",
-			"green:2.0",
-			"orange:1.0",
-			"red:1.0",
-		}, getUniqueIdentifiers(manager.Components()))
+
+	t.Run("cycle detection", func(t T) {
+		t.Run("with same version", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component1",
+							version: "0.0.1",
+						},
+					},
+				},
+			}, nil, component.ErrCyclicDependencies)
+		})
+
+		t.Run("with different version", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component1",
+							version: "0.0.2",
+						},
+					},
+				},
+			}, nil, component.ErrCyclicDependencies)
+		})
+
+		t.Run("with different levels", func(t T) {
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+							children: []treeItem{
+								{
+									name:    "component1",
+									version: "0.0.3",
+								},
+							},
+						},
+					},
+				},
+			}, nil, component.ErrCyclicDependencies)
+		})
+
+		t.Run("with different levels after component replace", func(t T) {
+			// We replace component1@0.0.1 to component1@0.0.4 where there is no cycle.
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+							children: []treeItem{
+								{
+									name:    "component1",
+									version: "0.0.3",
+								},
+							},
+						},
+					},
+				},
+				{
+					name:    "component1",
+					version: "0.0.4",
+				},
+			}, []string{
+				"component1@0.0.4",
+			}, nil)
+			// We replace component1@0.0.4 to component1@0.0.1 where there is cycle.
+			initAndCompareComponents(t, factory, []treeItem{
+				{
+					name:    "component1",
+					version: "0.0.4",
+				},
+				{
+					name:    "component1",
+					version: "0.0.1",
+					children: []treeItem{
+						{
+							name:    "component2",
+							version: "0.0.1",
+							children: []treeItem{
+								{
+									name:    "component1",
+									version: "0.0.3",
+								},
+							},
+						},
+					},
+				},
+			}, nil, component.ErrCyclicDependencies)
+		})
 	})
-	t.Run("test 2", func(t T) {
-		manager, initializer := factory()
-		require.NoError(t, initializer([]componego.Component{
-			purpleLevel10.Build(),
-			orangeLevel10.Build(),
-			redLevel10.Build(),
-		}))
-		// todo: improve the list. We need to add lists for different manager implementations.
-		require.Equal(t, []string{
-			"blue:3.0",
-			"purple:3.1",
-			"green:2.0",
-			"orange:2.0",
-			"red:1.0",
-		}, getUniqueIdentifiers(manager.Components()))
-	})
-	t.Run("test 3", func(t T) {
-		blueLevel1 := component.NewFactory("blue", "blue:1.0")
-		manager, initializer := factory()
-		require.NoError(t, initializer([]componego.Component{
-			redLevel10.Build(),
-			blueLevel1.Build(),
-		}))
-		// todo: improve the list. We need to add lists for different manager implementations.
-		require.Equal(t, []string{
-			"purple:3.1",
-			"blue:1.0",
-			"green:2.0",
-			"orange:2.0",
-			"red:1.0",
-		}, getUniqueIdentifiers(manager.Components()))
-	})
-	t.Run("cyclic dependencies 1", func(t T) {
-		blueLevel10 := component.NewFactory("blue", "blue:1.0")
-		blueLevel10.SetComponentComponents(func() ([]componego.Component, error) {
-			return []componego.Component{
-				redLevel10.Build(),
-			}, nil
+
+	t.Run("return error instead of component list", func(t T) {
+		expectedErr := errors.New("error")
+		componentFactory := component.NewFactory("component1", "0.0.1")
+		componentFactory.SetComponentComponents(func() ([]componego.Component, error) {
+			return nil, expectedErr
 		})
 		manager, initializer := factory()
-		require.ErrorIs(t, initializer([]componego.Component{
-			redLevel10.Build(),
-			blueLevel10.Build(),
-		}), component.ErrCyclicDependencies)
+		actualErr := initializer([]componego.Component{
+			componentFactory.Build(),
+		})
+		require.ErrorIs(t, actualErr, expectedErr)
 		require.Len(t, manager.Components(), 0)
-	})
-	t.Run("cyclic dependencies 2", func(t T) {
-		blueLevel10 := component.NewFactory("blue", "blue:1.0")
-		blueLevel10.SetComponentComponents(func() ([]componego.Component, error) {
-			return []componego.Component{
-				blueLevel10.Build(),
-			}, nil
-		})
-		manager, initializer := factory()
-		require.ErrorIs(t, initializer([]componego.Component{
-			redLevel10.Build(),
-			blueLevel10.Build(),
-		}), component.ErrCyclicDependencies)
-		require.Len(t, manager.Components(), 0)
-	})
-	t.Run("get components", func(t T) {
-		manager, initializer := factory()
-		require.NoError(t, initializer([]componego.Component{
-			redLevel10.Build(),
-		}))
-		require.Equal(t, manager.Components(), manager.Components())
-		require.NotSame(t, manager.Components(), manager.Components())
 	})
 }
 
-func getUniqueIdentifiers(components []componego.Component) []string {
-	result := make([]string, len(components))
-	for i, componentItem := range components {
-		result[i] = componentItem.ComponentVersion()
+type treeItem struct {
+	name     string
+	version  string
+	children []treeItem
+}
+
+func createTree(items []treeItem) []componego.Component {
+	result := make([]componego.Component, len(items))
+	for index, item := range items {
+		componentFactory := component.NewFactory(item.name, item.version)
+		// We support compatibility with older versions of the language.
+		if savedItem := item; len(savedItem.children) > 0 {
+			componentFactory.SetComponentComponents(func() ([]componego.Component, error) {
+				return createTree(savedItem.children), nil
+			})
+		}
+		result[index] = componentFactory.Build()
 	}
 	return result
+}
+
+func getComponentsIdentifiers(components []componego.Component) []string {
+	result := make([]string, len(components))
+	for i, componentItem := range components {
+		result[i] = componentItem.ComponentIdentifier() + "@" + componentItem.ComponentVersion()
+	}
+	return result
+}
+
+func initAndCompareComponents(t testing.T, factory managerFactory, components []treeItem, expectedIdentifier []string, expectedError error) {
+	manager, initializer := factory()
+	err := initializer(createTree(components))
+	if expectedError != nil {
+		require.ErrorIs(t, err, expectedError)
+		require.Len(t, manager.Components(), 0)
+		return
+	}
+	require.NoError(t, err)
+	if len(expectedIdentifier) == 0 && len(manager.Components()) == 0 {
+		return
+	}
+	require.Equal(t, expectedIdentifier, getComponentsIdentifiers(manager.Components()))
+	require.Equal(t,
+		getComponentsIdentifiers(manager.Components()),
+		getComponentsIdentifiers(manager.Components()),
+	)
 }

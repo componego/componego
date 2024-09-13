@@ -114,6 +114,24 @@ func XErrorsTester[T testing.T](
 	})
 }
 
+func GetOptionsByKey(t testing.T, err error, key string) any {
+	for _, err = range xerrors.UnwrapAll(err) {
+		// noinspection ALL
+		xError, ok := err.(xerrors.XError) //nolint:errorlint
+		if !ok {
+			continue
+		}
+		for _, option := range xError.ErrorOptions() {
+			if option.Key() == key {
+				return option.Value()
+			}
+		}
+	}
+	t.Errorf("failed to get error option by key '%s'", key)
+	t.FailNow()
+	return nil
+}
+
 func convertErrorMessage(errMessage string) string {
 	lines := strings.Split(errMessage, "\n")
 	for i, line := range lines {
