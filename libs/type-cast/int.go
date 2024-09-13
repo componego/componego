@@ -18,6 +18,7 @@ package type_cast
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/componego/componego/internal/utils"
@@ -44,6 +45,9 @@ func ToInt64(value any) (int64, error) {
 	case int64:
 		return castedValue, nil
 	case uint:
+		if castedValue > math.MaxInt64 {
+			return 0, fmt.Errorf("unable to cast %#v of type %T to int64", value, value)
+		}
 		return int64(castedValue), nil
 	case uint8:
 		return int64(castedValue), nil
@@ -52,6 +56,9 @@ func ToInt64(value any) (int64, error) {
 	case uint32:
 		return int64(castedValue), nil
 	case uint64:
+		if castedValue > math.MaxInt64 {
+			return 0, fmt.Errorf("unable to cast %#v of type %T to int64", value, value)
+		}
 		return int64(castedValue), nil
 	case float32:
 		return int64(castedValue), nil

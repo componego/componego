@@ -41,7 +41,7 @@ func ToString(value any) (string, error) {
 	case int64:
 		return strconv.FormatInt(castedValue, 10), nil
 	case uint:
-		return strconv.FormatInt(int64(castedValue), 10), nil
+		return strconv.FormatUint(uint64(castedValue), 10), nil
 	case uint8:
 		return strconv.FormatInt(int64(castedValue), 10), nil
 	case uint16:
@@ -49,7 +49,7 @@ func ToString(value any) (string, error) {
 	case uint32:
 		return strconv.FormatInt(int64(castedValue), 10), nil
 	case uint64:
-		return strconv.FormatInt(int64(castedValue), 10), nil
+		return strconv.FormatUint(castedValue, 10), nil
 	case float32:
 		return strconv.FormatFloat(float64(castedValue), 'f', -1, 32), nil
 	case float64:

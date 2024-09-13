@@ -17,6 +17,7 @@ limitations under the License.
 package tests
 
 import (
+	"math"
 	"testing"
 
 	"github.com/componego/componego/internal/testing/require"
@@ -129,5 +130,17 @@ func TestToInt64(t *testing.T) {
 	t.Run("struct value invalid", func(t *testing.T) {
 		_, err := type_cast.ToInt64(struct{}{})
 		require.Error(t, err)
+	})
+
+	t.Run("uint input above MaxInt64", func(t *testing.T) {
+		result, err := type_cast.ToInt64(uint(math.MaxInt64 + 1))
+		require.Error(t, err)
+		require.Equal(t, int64(0), result)
+	})
+
+	t.Run("uint64 input below MaxInt64", func(t *testing.T) {
+		result, err := type_cast.ToInt64(uint64(math.MaxInt64 + 1))
+		require.Error(t, err)
+		require.Equal(t, int64(0), result)
 	})
 }
