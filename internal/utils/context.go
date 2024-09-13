@@ -21,6 +21,12 @@ import (
 	"reflect"
 )
 
+const parentContextField = "Context"
+
+func init() {
+	checkContextForUsedGoVersion()
+}
+
 func IsParentContext(parent context.Context, child context.Context) (ok bool) {
 	if parent == nil || child == nil {
 		return false
@@ -33,7 +39,7 @@ func IsParentContext(parent context.Context, child context.Context) (ok bool) {
 		if reflectValue.Kind() != reflect.Struct {
 			return false
 		}
-		contextField := reflectValue.FieldByName("Context")
+		contextField := reflectValue.FieldByName(parentContextField)
 		if !contextField.IsValid() || contextField.IsNil() {
 			return false
 		}
@@ -41,5 +47,31 @@ func IsParentContext(parent context.Context, child context.Context) (ok bool) {
 		if !ok {
 			return false
 		}
+	}
+}
+
+func checkContextForUsedGoVersion() {
+	errMessage := `
+It looks like you are using a GoLang version that is unsupported by your project's framework version.
+This incompatibility was not detected during project compilation.
+---
+You need to update your framework to the latest version.
+If this does not solve the problem, please create an issue on GitHub -> https://github.com/componego/componego/issues
+We will fix this problem as soon as possible.
+`
+	parentCtx := context.Background()
+	childCtx, cancel := context.WithCancel(parentCtx)
+	defer cancel()
+	reflectValue := reflect.Indirect(reflect.ValueOf(childCtx))
+	if reflectValue.Kind() != reflect.Struct {
+		panic(errMessage)
+	}
+	contextField := reflectValue.FieldByName(parentContextField)
+	if !contextField.IsValid() {
+		panic(errMessage)
+	}
+	internalCtx, ok := contextField.Interface().(context.Context)
+	if !ok || internalCtx != parentCtx {
+		panic(errMessage)
 	}
 }
