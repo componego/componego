@@ -4,6 +4,7 @@
 [![Tests](https://github.com/componego/componego/actions/workflows/tests.yml/badge.svg?branch=master)](https://github.com/componego/componego/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/componego/componego/branch/master/graph/badge.svg?token=W4CPM75389)](https://codecov.io/gh/componego/componego)
 [![Go Reference](https://pkg.go.dev/badge/github.com/componego/componego.svg)](https://pkg.go.dev/github.com/componego/componego)
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)
 
 ![screenshot](./docs/mkdocs/theme/assets/images/social.png)
 
