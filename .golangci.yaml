@@ -3,26 +3,26 @@ run:
 linters:
   enable:
     - asciicheck
+    - copyloopvar
     - depguard
     - dogsled
     - durationcheck
     - errcheck
     - errorlint
-    - exportloopref
     - gci
     - gofmt
     - goimports
     - gosec
+    - gosimple
     - misspell
     - nakedret
     - nilerr
     - nolintlint
     - revive
-    - wastedassign
+    - staticcheck
     - unparam
     - unused
-    - staticcheck
-    - gosimple
+    - wastedassign
 issues:
   exclude-rules:
     - linters:
