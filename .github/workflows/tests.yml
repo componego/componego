@@ -9,10 +9,11 @@ jobs:
   main:
     strategy:
       matrix:
+        # Only one Go version and one OS version are allowed here.
         go-version: [ 1.22.x ]
         os-version: [ ubuntu-latest ]
     runs-on: ${{ matrix.os-version }}
-    name: GoLang ${{ matrix.go-version }}, ${{ matrix.os-version }}
+    name: GoLang ${{ matrix.go-version }}, ${{ matrix.os-version }} (main check)
     steps:
       - uses: actions/checkout@v4
       - name: Install GoLang
@@ -22,7 +23,7 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10.14
+          python-version: 3.10.x
       - name: Initialize cache
         uses: actions/cache@v4
         with:
@@ -42,3 +43,33 @@ jobs:
           file: ./coverage.out
           name: codecov-componego
           verbose: true
+
+  additional:
+    strategy:
+      matrix:
+        # Multiple versions are allowed here,
+        # but they must not duplicate the version combinations listed in the main task in this file.
+        go-version: [ 1.23.x ]
+        os-version: [ ubuntu-latest ]
+    runs-on: ${{ matrix.os-version }}
+    name: GoLang ${{ matrix.go-version }}, ${{ matrix.os-version }} (additional check)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GoLang
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10.x
+      - name: Initialize cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/componego
+          key: componego-${{ matrix.os-version }}-${{ matrix.go-version }}
+          restore-keys: |
+            componego-${{ matrix.os-version }}-${{ matrix.go-version }}
+      - name: Run tests
+        run: python ./scripts/make.py tests
