@@ -1,3 +1,8 @@
+## 0.2.0 (September 26, 2024)
+
+* Improved documentation and testing.
+* Fixed some bugs.
+
 ## 0.1.0 (July 27, 2024)
 
 * All interfaces are stable now and will no longer be changed.
