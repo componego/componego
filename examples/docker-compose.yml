@@ -1,13 +1,32 @@
 version: '3.8'
 
+x-applications-volume:
+  &applications-volume
+  type: bind
+  source: ../
+  target: /go/src/github.com/componego/componego
+
 services:
   componego-example-hello-app:
-    build:
-      context: ..
-      dockerfile: ./examples/hello-app/Dockerfile
+    build: .
+    volumes:
+      - <<: *applications-volume
+    entrypoint: [ "go", "run", "./hello-app/cmd/application/main.go" ]
+
   componego-example-url-shortener-app:
-    build:
-      context: ..
-      dockerfile: ./examples/url-shortener-app/Dockerfile
+    build: .
+    volumes:
+      - <<: *applications-volume
     ports:
       - "8080:8080"
+    environment:
+      - URL_SHORTENER_PORT=8080
+      - URL_SHORTENER_DB_USERNAME=secret_db_name
+      - URL_SHORTENER_DB_PASSWORD=secret_db_password
+    entrypoint: [ "sh", "-c", "
+      set -eo pipefail;
+      mkdir -p /apps/url-shortener/config;
+      cp -f ./url-shortener-app/config/config.json.example /apps/url-shortener/config/production.config.json;
+      go build -o /apps/url-shortener/app ./url-shortener-app/cmd/application/main.go;
+      cd /apps/url-shortener/ && exec /apps/url-shortener/app;
+    " ]

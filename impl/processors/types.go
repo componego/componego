@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+Copyright 2024-present Volodymyr Konstanchuk and contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

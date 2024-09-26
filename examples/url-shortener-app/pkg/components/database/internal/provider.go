@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"runtime"
 	"sync"
 
 	"github.com/componego/componego"
@@ -76,18 +75,24 @@ func (p *provider) CloseConnection(name string) error {
 	return fmt.Errorf("not found connection with name '%s'", name)
 }
 
-func (p *provider) Close() error {
+func (p *provider) Close() (err error) {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
 	errs := make([]error, 0, len(p.list))
+	defer func() {
+		err = errors.Join(errs...)
+	}()
 	for _, connection := range p.list {
-		errs = append(errs, connection.Close())
+		// We use deferred functions to ensure that all connections are closed even if a panic occurs.
+		// Panic will be intercepted at the framework core level.
+		// noinspection ALL
+		defer func(connection io.Closer) {
+			errs = append(errs, connection.Close())
+		}(connection)
 	}
 	// It sets a flag that the connection can no longer be opened.
 	p.list = nil
-	// We switch the runtime so that waiting goroutines can complete database provider.
-	runtime.Gosched()
-	return errors.Join(errs...)
+	return err
 }
 
 var (

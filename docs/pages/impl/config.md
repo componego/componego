@@ -4,8 +4,7 @@
 
 Configuration is an important part of every application.
 
-The framework has a single point for reading the configuration.
-This is a special method that you can add to the [application](./application.md#applicationconfiginit) struct:
+The framework provides a single point for reading the configuration through a special method that you can add to an [application](./application.md#applicationconfiginit) struct:
     ```go hl_lines="12 22"
     package application
 
@@ -31,22 +30,17 @@ This is a special method that you can add to the [application](./application.md#
         _ componego.ApplicationConfigInit = (*Application)(nil)
     )
     ```
-As you can see, this method returns a map with configuration keys and values.
-
-You can also return an error if there was an error reading the configuration.
-
-!!! note
-    Since the method accepts the [environment](./environment.md), you can return different configurations depending on the [mode](./runner.md#application-mode) in which the application is running.
+This method returns a map containing the configuration keys and values.
+You can also return an error if there was an issue reading the configuration.
 
 This method is called only once and should return the configuration for the [application](./application.md) and [all components](./component.md) within that application.
 
-
 ## Configuration Reader
 
-You can read the configuration in different ways as you like.
+You can read the configuration in various ways.
 
-For example, you can use third-party libraries to get the configuration.
-However, your function or library must return a variable of type ^^map[string]any^^.
+For example, you can use third-party libraries to obtain the configuration.
+However, your function or library must return a variable of the type ^^map[string]any^^:
     ```go hl_lines="7 18 25"
     package application
 
@@ -88,7 +82,7 @@ However, your function or library must return a variable of type ^^map[string]an
     )
     ```
 
-You can also add post-processing of values after reading the configuration:
+You can also perform post-processing of values after reading the configuration:
     ```go hl_lines="5 13"
     package config
 
@@ -115,7 +109,7 @@ This function converts the following values:
         }
     }
     ```
-in:
+into:
     ```json
     {
         "server": {
@@ -123,7 +117,7 @@ in:
         }
     }
     ```
-You can also use the default value after pipe:
+You can also use the default value after a pipe:
     ```json
     {
         "server": {
@@ -132,19 +126,19 @@ You can also use the default value after pipe:
     }
     ```
 
-We have described the map that function ^^ApplicationConfigInit^^ will return.
+We have described the map that ^^ApplicationConfigInit^^ returns.
 The next section describes how to get this value in your [application](./application.md) or [component](./component.md).
 
 ## Configuration Getter
 
-The configuration value can be obtained using the [environment](./environment.md) in any part of the application:
+Any configuration values can be accessed using the [environment](./environment.md) in any part of the application:
     ```go
     value, err := env.ConfigProvider().ConfigValue("server.addr", nil)
     ```
 
-Golang is a strongly typed language and it is impossible to use generics in this case in the current version of the language (go1.22).
+Golang is a strongly typed language and it is impossible to use generics ^^in this case^^ in the current version of the language (go1.22).
 
-There is an additional function inside the framework that helps solve the typing problem:
+There is an additional function within the framework that helps solve the typing problem:
     ```go hl_lines="5 9"
     package config
 
@@ -157,7 +151,7 @@ There is an additional function inside the framework that helps solve the typing
         return config.Get[string]("server.addr", nil, env)
     }
     ```
-The shorter code looks like this:
+The shorter code appears as follows:
     ```go hl_lines="5 9"
     package config
 
@@ -172,11 +166,11 @@ The shorter code looks like this:
     ```
 
 !!! note
-    We use a dot as a separator between configuration keys for different levels of nesting.
+    We use a dot as a separator between configuration keys to indicate different levels of nesting.
 
 ## Configuration Processor
 
-Validation and transformations of configuration values can be done using [processors](./processor.md).
+Validation and transformation of configuration values can be performed using [processors](./processor.md):
     ```go hl_lines="6"
     package config
 
@@ -195,21 +189,29 @@ Validation and transformations of configuration values can be done using [proces
     ```
 
 !!! note
-    Typing is an important part of processors. The generic must meet the processor. Otherwise, there may be an error.
+    Typing is a crucial aspect of processors. The generic type must match the processor. Otherwise, there may be an error:
     ```go hl_lines="3"
     config.GetOrPanic[int64]("server.port", processors.Multi(
         processors.IsRequired(),
         processors.ToInt64(),
     ), env)
     ```
-    We recommend that you always use a processor to change the type, because there is no guarantee that ^^ApplicationConfigInit^^ will return a value of the type you want.
+    You should use a processor to change the type, as there is no guarantee that ^^ApplicationConfigInit^^ will return a value of the desired type.
+
+## Configuration Struct
+
+Application configurations can indeed become quite large, and managing each configuration key with individual [processors](./processor.md) can be inefficient.
+Instead, it's recommended to define a struct that contains fields corresponding to different configuration values.
+You can validate this struct in a single step during the initialization of the dependency injection [DI container](./dependency.md).
+
+Each component can have its own separate struct to describe its configuration.
+This allows for better modularity and separation of concerns.
+You can find an example of such a struct-based configuration approach [here](https://medium.com/@konstanchuk/25bfd16a97a9#413f){:target="_blank"}.
 
 ## Configuration Examples
 
-We recommend always creating an example configuration file when you create an [application](./application.md) or [component](./component.md).
+It’s recommended to create an example configuration file when you create an [application](./application.md) or [component](./component.md).
 
-For example, you created a component and a file with an example configuration of this component.
-
-A developer who will use this component will be able to copy and merge the example configuration file into his main application configuration file.
-
-After this, this file will be read in function ^^ApplicationConfigInit^^.
+For instance, if you create a component, you should also include a file with an example of its configuration.
+This allows developers who use the component to easily copy and merge the example configuration file into their main application configuration file.
+After that, it can be read in the ^^ApplicationConfigInit^^ function.

@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+Copyright 2024-present Volodymyr Konstanchuk and contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -54,17 +54,19 @@ func RunAndExit(app componego.Application, appMode componego.ApplicationMode) {
 }
 
 // RunGracefullyAndExit runs the application and stops it gracefully.
+// This function cancels the main context of the application,
+// so the process of stopping the application depends on your application code.
 func RunGracefullyAndExit(app componego.Application, appMode componego.ApplicationMode) {
 	cancelableCtx, cancelCtx := context.WithCancel(context.Background())
 	defer cancelCtx() // This will cancel the context if panic occurs.
 	interruptChan := make(chan os.Signal, 1)
-	signal.Notify(interruptChan, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(interruptChan, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		select {
 		case <-interruptChan:
 		case <-cancelableCtx.Done():
-			signal.Stop(interruptChan)
 		}
+		signal.Stop(interruptChan)
 		cancelCtx()
 	}()
 	exitCode := RunWithContext(cancelableCtx, app, appMode)

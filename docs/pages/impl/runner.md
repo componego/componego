@@ -2,7 +2,7 @@
 
 ## Basic Information
 
-This is the entity that runs the [application](./application.md) using the [driver](./driver.md).
+This entity is responsible for running the [application](./application.md) using the [driver](./driver.md).
     ```go hl_lines="11"
     package main
 
@@ -17,12 +17,12 @@ This is the entity that runs the [application](./application.md) using the [driv
         runner.RunAndExit(application.New(), componego.ProductionMode)
     }
     ```
-This line in the main function is enough to start your [application](./application.md).
+This line in the main function is sufficient to start your [application](./application.md).
 
-Function ^^runner.RunAndExit^^ starts the application and after stopping the application exits the program with exit code.
+The function ^^runner.RunAndExit^^ runs the application and exits the program with an exit code after the application stops.
 
 !!! note
-    If the application completed with an error, then the exit code from the application will not be equal to 0 (componego.SuccessExitCode).
+    If the application completes with an error, the exit code will not equal 0 (componego.SuccessExitCode).
 
 You can also use ^^runner.Run^^, which starts the application but does not exit it:
     ```go hl_lines="11"
@@ -41,13 +41,11 @@ You can also use ^^runner.Run^^, which starts the application but does not exit 
     }
     ```
 
-There are also methods ^^RunWithContext^^ and ^^RunGracefullyAndExit^^, which allow you to run the application using a custom context or with a graceful shutdown.
+There are also methods ^^RunWithContext^^ and ^^RunGracefullyAndExit^^, which allow you to run the application using a custom context or facilitate a graceful shutdown.
 
 ## Application Mode
 
-As you can see, you can run the application in different modes.
-
-By default, there are several modes:
+As you can see, you can run the application in different modes. By default, there are several modes available:
 
 | Name                     | Description                |
 |--------------------------|----------------------------|
@@ -57,7 +55,7 @@ By default, there are several modes:
 
 But you can add any mode you want.
 
-You can get the application mode through the [environment](./environment.md).
+You can retrieve the application mode through the [environment](./environment.md):
     ```go
     if env.ApplicationMode() == componego.DeveloperMode {
         // ...
@@ -65,33 +63,32 @@ You can get the application mode through the [environment](./environment.md).
     ```
 
 !!! note
-    You should always use production mode when you run your application on a production server.
-    It is also recommended to use test mode when you run the application in [tests](../tests/runner.md#test-mode).
+    You should always use production mode when running your application on a production server.
+    It is also recommended to use test mode when executing the application in [tests](../tests/runner.md#test-mode).
 
 !!! note
-    We strongly recommend using multiple application entry points,
-    as shown in this [example](https://github.com/componego/componego/tree/master/examples/url-shortener-app/cmd/application){:target="_blank"}.
+    We strongly recommend using multiple application entry points, as demonstrated in [this example](https://github.com/componego/componego/tree/master/examples/url-shortener-app/cmd/application){:target="_blank"}.
 
-    We believe that applications should know in what mode it will be launched even before launching.
-    For example, this allows you to [read](./config.md#configuration-reader) different configurations depending on the environment,
-    instead of building the environment depending on the configuration.
+    We believe that applications should be aware of the mode in which they will be launched even before execution.
+    For example, this approach allows you to [read](./config.md#configuration-reader) different configurations based on the environment,
+    rather than constructing the environment according to the configuration.
 
 ## Custom Runner
 
-The custom runner is significant because it is where you can start modifying the framework core to suit your specific requirements.
+The custom runner is significant as it serves as an entry point where you can begin modifying the core of the framework to meet your specific requirements.
 
 !!! note
-    If you are new to our framework, please skip this section.
-    Come back to it after you've fully read the rest of the documentation pages.
+    If you are a beginner with our framework, please skip this section
+    and return to it after you have thoroughly read the rest of the documentation.
 
 ### Specific Driver Options
 
-This is related to the application [driver](./driver.md), but you can control it through the runner.
-Options are some factories that implement all the entities that the framework provides.
+This is related to the application [driver](./driver.md), but you can manage it through the runner.
+The options are factories that implement all default entities provided by the framework.
 So this is the key (but not the only one) how you can replace the core of the framework with your code.
 
 For example, you can pass additional options to your application.
-Let's create a new Run function that takes arguments.
+Let's create a new Run function that accepts arguments:
     ```go hl_lines="15"
     package custom_runner
 
@@ -118,27 +115,27 @@ Let's create a new Run function that takes arguments.
     }
     ```
 
-Look at what options are available in the code driver to ensure you can control everything.
+Review the options which are available in the driver code to ensure you can control everything.
 
 !!! note
-    We are creating a context in this code.
-    You can read about how to use this context [here](./environment.md#application-context).
+    The ability to replace the core of the framework is crucial because it allows for flexibility and customization.
+    This means you are not bound to the default implementations of certain functions in the framework.
+    Instead, you can substitute them with alternative methods that comply with the required interfaces.
+    This feature enhances the adaptability of your application, enabling you to tailor functionalities to meet specific needs
+    or to integrate with other systems more effectively.
 
-!!! note
-    The ability to replace the core of the framework is important because you are not tied to the implementation of some functions of the framework.
-    You can replace them with other methods that satisfy some interfaces.
-
-    However, more important is the ability to easily replace business logic, because this can be used in mocks and more.
-    The framework can do this too. We have described this on [other pages](../tests/mock.md#rewriting-rules).
+    However, even more critical is the ability to replace business logic easily, as this functionality can be instrumental in creating mocks and other testing scenarios.
+    The framework supports this capability as well. We've covered the details on [other pages](../tests/mock.md#rewriting-rules),
+    highlighting how you can substitute specific business logic implementations to facilitate testing and improve code maintainability.
 
 ### Errors Handing
 
 !!! note
-    It is recommended to use a special application] method [ApplicationErrorHandler](./application.md#applicationerrorhandler) to catch global errors or panic.
+    It is recommended to use a special application method [ApplicationErrorHandler](./application.md#applicationerrorhandler) to catch global errors or panic.
 
 At the runner level you can handle errors that were not handled at all previous levels.
 
-Based on the previous example, the following lines add error handling.
+Based on the previous example, the following lines can be added for error handling:
     ```go hl_lines="5-6"
     func Run(app componego.Application, appMode componego.ApplicationMode) int {
         d := driver.New(nil)
@@ -150,8 +147,10 @@ Based on the previous example, the following lines add error handling.
         return exitCode
     }
     ```
-We convert the error into a string using some handlers and show it to the user.
-Of course, you can use any error handling you want or add your handlers to the standard handlers.
+You can convert the error into a string using specific handlers and display it to users.
+This approach allows for a user-friendly presentation of error messages.
+You can customize the error handling logic to fit your application’s needs.
+Here's how you might implement this:
     ```go hl_lines="2"
     handlers := unhandled_errors.GetHandlers()
     handlers.AddBefore(
@@ -168,9 +167,9 @@ Of course, you can use any error handling you want or add your handlers to the s
     _, _ = fmt.Fprint(os.Stderr, unhandled_errors.ToString(err, appMode, handlers))
     ```
 
-In addition to function ^^AddBefore^^, there are many other functions for handling errors in the required sequence (ordered map).
-Look at the [source code](https://github.com/componego/componego/tree/master/libs/ordered-map){:target="_blank"} for a complete list of these methods.
+In addition to function ^^AddBefore^^, t, there are numerous other functions designed for handling errors in a specific sequence using an ordered map.
+For a complete list of these methods, you can refer to the [source code here](https://github.com/componego/componego/tree/master/libs/ordered-map){:target="_blank"}.
 
 !!! note
-    Don't be afraid to look into the core of the framework and copy methods to make changes for your specific requirements.
-    However, try to follow the [rewriting rules](../tests/mock.md#rewriting-rules) provided by the framework.
+    Don't hesitate to explore the core of the framework and copy methods to modify them for your specific requirements.
+    However, it's important to adhere to the [rewriting rules](../tests/mock.md#rewriting-rules) outlined by the framework.

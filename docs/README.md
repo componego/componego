@@ -1,3 +1,3 @@
-Please open [website](https://componego.github.io) to see the documentation or run the documentation on your local machine using '**docker-compose up componego-framework-docs**'.
+Please visit the [website](https://componego.github.io) to see the documentation, or run the documentation locally using the command: '**docker-compose up componego-framework-docs**'.
 
-You can use previous commits to run a website locally with documentation for previous framework versions.
+You can also use previous commits to run a local website with documentation for earlier versions of the framework.

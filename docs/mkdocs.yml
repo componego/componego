@@ -1,5 +1,5 @@
 site_name: Componego Documentation
-site_description: The most flexible and very simple component-oriented framework for GoLang applications.
+site_description: The most flexible and the simplest component-oriented framework for GoLang applications.
 site_author: Volodymyr Konstanchuk
 site_url: https://componego.github.io/
 author_site: https://github.com/konstanchuk
@@ -16,7 +16,7 @@ theme:
   logo: assets/images/logo.png
   favicon: assets/images/favicon.ico
   social_image: assets/images/social.png
-  social_title_prefix: The Componego Framework
+  social_title_prefix: Componego Framework
   palette:
     - scheme: slate
       primary: red

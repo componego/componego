@@ -4,7 +4,7 @@
 
 Processors are special functions that convert variables of one type into another and validate them.
 
-On the [previous page](./config.md#configuration-processor) you would see an example of using processors:
+On the [previous page](./config.md#configuration-processor) you have seen the example of using processors:
     ```go hl_lines="6 12"
     package config
 
@@ -28,7 +28,7 @@ On the [previous page](./config.md#configuration-processor) you would see an exa
 | Function                          | Description                                         |
 |-----------------------------------|-----------------------------------------------------|
 | processors.ToBool()               | converts the value to boolean                       |
-| processors.IsBool()               | checks whether a value is a boolean value           |
+| processors.IsBool()               | checks whether the value is a boolean value         |
 | processors.ToInt64()              | converts the value to int64                         |
 | processors.ToFloat64()            | converts the value to float64                       |
 | processors.ToString()             | converts the value to string                        |
@@ -37,7 +37,7 @@ On the [previous page](./config.md#configuration-processor) you would see an exa
 
 ## Custom Processor
 
-There are 2 simple ways to create this:
+There are 2 simple ways to create it:
 === "Long code"
     ```go hl_lines="15"
     package processor
@@ -73,8 +73,8 @@ There are 2 simple ways to create this:
         })
     }
     ```
-??? note "Does it support DI?"
-    Of course, like other parts of the application, you can use [dependencies](./dependency.md):
+!!! note
+    Like in other parts of the application, you can use [dependencies](./dependency.md) within processors:
     ```go
     package processor
 
@@ -91,7 +91,7 @@ There are 2 simple ways to create this:
 
 ## Multi Processor
 
-This can be implemented using ^^processors.Multi^^:
+This can be implemented using ^^processors.Multi^^, which allows for combining multiple functions into one:
     ```go hl_lines="11"
     package processor
 
@@ -111,15 +111,15 @@ This can be implemented using ^^processors.Multi^^:
         )
     }
     ```
-In the second processor in the example above, we are not checking if the value is a string as we are confident that it is a string
-because the value will be converted to a string in the first processor.
+Look at the example above: we do not check if the value is a ^^string^^ in the second processor,
+as we are confident it will be converted to a ^^string^^ in the first processor.
 
-This is a chain of function calls one after another.
+This is a chain of function calls executed sequentially.
 If an error occurs in any function, the chain will be interrupted.
 
 ## Processor As Validator
 
-In fact, you can use processors not only to convert data to another format, but also for validation.
+You can use processors not only to convert data to another format but also for validation:
     ```go
     package processor
 
@@ -143,7 +143,7 @@ In fact, you can use processors not only to convert data to another format, but 
         )
     }
     ```
-You can also use third-party libraries to validate specific rules.
+You can also use third-party libraries to validate specific rules:
     ```go hl_lines="15"
     package processor
 
@@ -166,9 +166,6 @@ You can also use third-party libraries to validate specific rules.
     ```
 
 !!! note
-    You can create a separate file where you can register all the possible processors that you are going to use in your application.
-
-!!! note
-    The framework was designed as a way to run an application.
-    You should not use framework functions in the main loop of your application.
-    Use the framework only to initialize the main application loop.
+    The framework is designed as a way to run an application.
+    You should avoid using framework functions within the main loop of your application.
+    Instead, utilize the framework solely for initializing the main application loop.

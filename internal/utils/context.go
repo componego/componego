@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+Copyright 2024-present Volodymyr Konstanchuk and contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ func IsParentContext(parent context.Context, child context.Context) (ok bool) {
 
 func checkContextForUsedGoVersion() {
 	errMessage := `
-It looks like you are using a GoLang version that is unsupported by your project's framework version.
+It looks like you are using a GoLang version not supported by the framework version installed in your project.
 This incompatibility was not detected during project compilation.
 ---
 You need to update your framework to the latest version.

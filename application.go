@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+Copyright 2024-present Volodymyr Konstanchuk and contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -93,6 +93,6 @@ type ApplicationIO interface {
 	InputReader() io.Reader
 	// OutputWriter returns a pointer to output data from the application.
 	OutputWriter() io.Writer
-	// ErrorOutputWriter This function returns a pointer to output errors from the application.
+	// ErrorOutputWriter returns a pointer to output errors from the application.
 	ErrorOutputWriter() io.Writer
 }

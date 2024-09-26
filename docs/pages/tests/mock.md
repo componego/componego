@@ -2,10 +2,9 @@
 
 ## Basic Example
 
-Let's say you want to replace some part of your [application](../impl/application.md) for testing.
-This is very easy to do and is one of the main features of this framework.
+If you want to replace a part of your [application](../impl/application.md) for testing, you can do so easily.
 
-Let's use an example application to look at how you can create a mock.
+Use the example of the application below to see how to create a mock:
     ```go hl_lines="10 15 22"
     package mocks
 
@@ -32,9 +31,9 @@ Let's use an example application to look at how you can create a mock.
         // ...
     )
     ```
-As you can see, we use inheritance. In a child (mock) struct, you can rewrite methods and return new values.
+We use inheritance. In a child struct (mock), you can override methods to return new values.
 
-Here's an example of what it might look like for [dependencies](./../impl/dependency.md), but you can add any other method.
+Here's an example of overriding dependencies, but you can add any other method:
     ```go  hl_lines="2 3 10"
     func (a *ApplicationMock) ApplicationDependencies() ([]componego.Dependency, error) {
         dependencies, err := a.Application.ApplicationDependencies()
@@ -48,40 +47,40 @@ Here's an example of what it might look like for [dependencies](./../impl/depend
         return dependencies, err
     }
     ```
-We call the parent method and add new data.
+We call the parent method and then add new data.
 
-How to run the mock is shown on the [next documentation page](./runner.md).
+It is explained how to run the mock on the [next documentation page](./runner.md).
 
 ## Rewriting Rules
 
-We have already described this on previous documentation pages for each framework entity. But let's sum it up.
+We've already described this on previous documentation pages for each framework entity, but let's sum it up.
 
 !!! note
-    We use the [order in which the methods are called](../impl/driver.md#application-initialization-order).
-    Methods that were called last may rewrite the return data of previous methods.
+    We follow the [order in which the methods are called](../impl/driver.md#application-initialization-order).
+    The last methods called may override the return data of the previous methods.
 
 ### For Components
 
-If several [components](../impl/component.md#componentidentifier) have the same identifier, the component specified last will be applied.
+If several [components](../impl/component.md#componentidentifier) the same identifier, the component specified last will take precedence.
 
 ### For Dependencies
 
 The last [dependencies](../impl/dependency.md) in the list are applied.
 
-If you use a [constructor](../impl/dependency.md#dependency-constructors) for dependencies, the dependencies will be rewritten by the last constructor if the return types match the constructor you want to rewrite.
+If you use a [constructor](../impl/dependency.md#dependency-constructors) for dependencies, the last constructor will overwrite the dependencies if its return types match those of the constructor you want to replace.
 
-You will get an error if you return a constructor that returns a different set of types. The exception is the last returned type if it is an error.
+You will encounter an error if you return a constructor that produces a different set of types, except for the last returned type if it is an error.
 
-If instead of a constructor you use an object directly, then you can rewrite this value with the same object or constructor that returns the same object type.
+If you use an object directly instead of a constructor, you can overwrite this value with either the same object or a constructor that returns an object of the same type.
 
 !!! note
-    Objects that are returned by [environment](../impl/environment.md#how-to-use-environment) methods cannot be rewritten.
+    Objects returned by the [environment](../impl/environment.md#how-to-use-environment) methods cannot be overwritten..
 
 ### For Configuration
 
-Everything is simple here. You need to read data from another resource.
+Everything is straightforward here. You need to read data from another resource.
 
-For example, you can use [application mode](../impl/runner.md#application-mode) to read different configurations:
+For example, you can use the [application mode](../impl/runner.md#application-mode) to read various configurations:
     ```go hl_lines="18 20 22"
     package application
 
@@ -116,11 +115,11 @@ For example, you can use [application mode](../impl/runner.md#application-mode) 
     )
     ```
 
-You can also rewrite this method in a mock and return a map with a different configuration that is needed for your test.
+You can also override this method in a mock to return a map with a different configuration required for your test.
 
 ### For Framework Core
 
-If you want to replace something inside the framework, then you can use [driver options](../impl/runner.md#specific-driver-options).
+If you want to replace something within the framework, you can use [driver options](../impl/runner.md#specific-driver-options).
 
-Don't be afraid to copy core functions to make the changes necessary for your project.
-We will also be glad to receive [any suggestion or pull request](../contribution/guide.md) that will help develop and improve this project.
+Don't hesitate to copy core functions to make the necessary changes for your project.
+We would also appreciate any [any suggestion or pull request](../contribution/guide.md) that can help develop this project.

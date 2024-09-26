@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+Copyright 2024-present Volodymyr Konstanchuk and contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,11 +17,30 @@ limitations under the License.
 package tests
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/componego/componego/internal/testing/require"
 	"github.com/componego/componego/internal/utils"
 )
+
+func TestIsErrorType(t *testing.T) {
+	t.Run("built-in error type", func(t *testing.T) {
+		errType := reflect.TypeOf((*error)(nil)).Elem()
+		require.True(t, utils.IsErrorType(errType))
+	})
+
+	t.Run("custom error type", func(t *testing.T) {
+		errType := reflect.TypeOf((*customError)(nil)).Elem()
+		require.True(t, utils.IsErrorType(errType))
+	})
+
+	t.Run("not error type", func(t *testing.T) {
+		type notAnError struct{}
+		notErrType := reflect.TypeOf((*notAnError)(nil)).Elem()
+		require.False(t, utils.IsErrorType(notErrType))
+	})
+}
 
 func TestIndirect(t *testing.T) {
 	t.Run("nil value", func(t *testing.T) {
@@ -178,3 +197,13 @@ func TestIsEmpty(t *testing.T) {
 		require.False(t, utils.IsEmpty(instance))
 	})
 }
+
+type customError struct {
+	message string
+}
+
+func (c customError) Error() string {
+	return c.message
+}
+
+var _ error = (*customError)(nil)

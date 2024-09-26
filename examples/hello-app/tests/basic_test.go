@@ -17,8 +17,10 @@ func TestBasic(t *testing.T) {
 	buffer := &bytes.Buffer{}
 	// We run tests inside mock of the current application example.
 	// You can replace parts of the application specifically for the test in this application mock.
-	env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock(), &driver.Options{
-		AppIO: application.NewIO(nil, buffer, buffer),
+	env, cancelEnv := runner.CreateTestEnvironment(t, mocks.NewApplicationMock(), &runner.TestOptions{
+		Driver: driver.New(&driver.Options{
+			AppIO: application.NewIO(nil, buffer, buffer),
+		}),
 	})
 	t.Cleanup(cancelEnv)
 

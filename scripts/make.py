@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+# Copyright 2024-present Volodymyr Konstanchuk and contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,11 +45,12 @@ META_PACKAGE_VERSION: Final[str] = 'latest'
 # noinspection SpellCheckingInspection
 GOSEC_VERSION: Final[str] = 'latest'
 # noinspection SpellCheckingInspection
-GOLANGCI_LINT_VERSION: Final[str] = 'latest'
+GOLANGCI_LINT_VERSION: Final[str] = 'v1.61.0'
 # noinspection SpellCheckingInspection
-GOFUMPT_VERSION: Final[str] = 'latest'
+GOFUMPT_VERSION: Final[str] = 'v0.7.0'
 
-LICENSE_HASH: Final[str] = 'f109dd29cfbafffd1d23caf22662462bb06a4a9d'
+# This is the Apache 2.0 license hash that is present in each file.
+LICENSE_HASH: Final[str] = 'c5d3aea6439d6869df0a3f8d705df6ff392cd858'
 
 TEST_COVERAGE_LIMIT: Final[float] = 80
 # noinspection SpellCheckingInspection
@@ -60,7 +61,6 @@ TEST_COVERAGE_IGNORE: Final[tuple] = (
     'impl/**/tests/**',
     'internal/**/tests/**',
     'libs/**/tests/**',
-    'qcomponents/**/tests/**',
     'tools/**/tests/**',
 )
 TEST_COVERAGE_FILE: Final[str] = 'coverage.out'
@@ -326,7 +326,7 @@ def run_parallel_commands(commands: list[str]) -> None:
     results: dict[str, tuple[str, str, int]] = {}
     with concurrent.ThreadPoolExecutor(max_workers=len(commands)) as executor:
         futures = {executor.submit(run_command, command): command for command in commands}
-        print('> wait for results....')
+        print('> wait for results...')
         for future in futures:
             results[futures[future]] = future.result()
 
@@ -480,9 +480,15 @@ def license_check(_: Args) -> None:
         filename = path.join(basedir(), filename)
         with open(filename, 'r', encoding='utf-8') as file:
             text = file.read(700)
+            has_copyright = False
+            license_text = []
             try:
-                license_text = text[text.find('/*') + len('/*'):text.rfind('*/')].strip()
-                license_hash = sha1(license_text.encode('utf-8')).hexdigest()
+                for line in text[text.find('/*') + len('/*'):text.rfind('*/')].splitlines():
+                    if not has_copyright and line.startswith('Copyright'):
+                        has_copyright = True
+                    elif has_copyright:
+                        license_text.append(line)
+                license_hash = sha1('\n'.join(license_text).strip().encode('utf-8')).hexdigest()
                 if license_hash == LICENSE_HASH:
                     continue
             except ValueError:

@@ -1,6 +1,5 @@
 FROM golang:1.22-alpine
 
-ENV GOROOT /usr/local/go
 ENV PIP_ROOT_USER_ACTION=ignore
 
 RUN apk add --update bash git make gcc libc-dev binutils-gold && \

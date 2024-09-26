@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/componego/componego"
+	"github.com/componego/componego/impl/environment/managers/config"
 	"github.com/componego/componego/impl/environment/managers/dependency"
+	"github.com/componego/componego/impl/processors"
 
 	"github.com/componego/componego/examples/url-shortener-app/third_party/errgroup"
 	"github.com/componego/componego/examples/url-shortener-app/third_party/servermux"
 
-	"github.com/componego/componego/examples/url-shortener-app/internal/config"
 	"github.com/componego/componego/examples/url-shortener-app/internal/server/handlers"
 )
 
@@ -37,7 +38,7 @@ func Run(env componego.Environment) error {
 		return err
 	}
 	server := &http.Server{
-		Addr:              config.GetServerAddr(env),
+		Addr:              getServerAddr(env),
 		ReadTimeout:       1 * time.Second,
 		ReadHeaderTimeout: 1 * time.Second,
 		WriteTimeout:      1 * time.Second,
@@ -90,4 +91,11 @@ func listenAndServe(env componego.Environment, server *http.Server) error {
 		return errors.Join(server.Shutdown(cancelableCtx), err)
 	})
 	return errGroup.Wait()
+}
+
+func getServerAddr(env componego.Environment) string {
+	return config.GetOrPanic[string]("server.addr", processors.Multi(
+		processors.DefaultValue(":3030"),
+		processors.ToString(),
+	), env)
 }

@@ -2,16 +2,15 @@
 
 ## Basic information
 
-An environment package serves as a comprehensive solution for managing the runtime of application environment.
+The environment package serves as a comprehensive solution for managing an application runtime.
 This package not only provides access to [dependency injection (DI)](./dependency.md) management but also includes features for
-handling application [active components](./component.md),
-provides access to [configuration](./config.md), [application mode](./runner.md#application-mode),
+handling application [active components](./component.md), [configuration](./config.md), [application mode](./runner.md#application-mode),
 [IO](./environment.md#application-io) and [global context](./environment.md#application-context).
 
 ## How to get environment
 
 The environment can be accessed in several ways.
-The first and easiest way is to get this object in the [application action](./application.md#applicationaction).
+The first and easiest way is to get this object in the [application action](./application.md#applicationaction):
     ```go
     func (a *Application) ApplicationAction(env componego.Environment, _ []string) (int, error) {
         env.GetContext()
@@ -29,7 +28,7 @@ The first and easiest way is to get this object in the [application action](./ap
     var _ componego.Application = (*Application)(nil)
     ```
 
-You can also get this object via DI.
+You can also get this object via DI:
     ```go
     type MyType struct {
         env componego.Environment `componego:"inject"`
@@ -69,12 +68,12 @@ or another ways described in the [documentation about DI](./dependency.md).
 | env.ConfigProvider()    | returns an object for getting config                       | [open](./config.md#configuration-getter)       |
 
 
-This is a universal key for accessing any part of the application.
+This serves as a universal key for accessing any part of the application.
 
 ## Application Context
 
 It is recommended to use the application context to run various functions.
-You can also replace the current context with another context, but the new context must inherit from the previous main context:
+You can also replace the current context with another one, but the new context must inherit from the previous main context:
     ```go hl_lines="14 16"
     package component
 
@@ -99,7 +98,7 @@ You can also replace the current context with another context, but the new conte
 
 ## Application IO
 
-If you want to output (or receive) some text to (from) the console, then you must use special methods:
+If you want to output (or receive) some text to (from) the console, you must use special methods:
     ```go hl_lines="2"
     func (a *Application) ApplicationAction(env componego.Environment, _ []string) (int, error) {
         appIO := env.ApplicationIO()

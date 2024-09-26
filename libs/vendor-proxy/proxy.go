@@ -1,5 +1,5 @@
 /*
-Copyright 2024 Volodymyr Konstanchuk and the Componego Framework contributors
+Copyright 2024-present Volodymyr Konstanchuk and contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -32,8 +32,8 @@ var (
 	ErrArgumentsNotValidated = ErrVendorProxy.WithMessage("arguments are not validated", "E0814")
 	ErrWrongCountArguments   = ErrVendorProxy.WithMessage("wrong count of arguments", "E0815")
 
-	instances map[string]Proxy
-	mutex     sync.Mutex
+	instances = map[string]Proxy{}
+	mutex     = sync.Mutex{}
 	nilTypes  = []reflect.Kind{
 		reflect.Array,
 		reflect.Func,
@@ -46,11 +46,6 @@ var (
 )
 
 type contextFunction = func(_ Context, _ ...any) (any, error)
-
-func init() {
-	instances = make(map[string]Proxy, 5)
-	mutex = sync.Mutex{}
-}
 
 type Proxy interface {
 	AddFunction(name string, function any) error

@@ -2,7 +2,7 @@ FROM python:3.10.13-slim
 
 WORKDIR /docs
 
-# mkdocs mkdocs-material mkdocs-minify-plugin mkdocs-material-extensions
+# mkdocs mkdocs-material mkdocs-minify-plugin mkdocs-material-extensions beautifulsoup4
 COPY pyproject.toml poetry.lock ./
 
 RUN pip install poetry==1.7.0 && poetry install --no-root --no-directory
