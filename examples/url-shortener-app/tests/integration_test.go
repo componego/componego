@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/componego/componego/tests/runner"
 
-	"github.com/componego/componego/examples/url-shortener-app/internal/server"
+	"github.com/componego/componego/examples/url-shortener-app/internal/server/handlers"
 	"github.com/componego/componego/examples/url-shortener-app/internal/utils"
+	"github.com/componego/componego/examples/url-shortener-app/pkg/components/test-server"
 	"github.com/componego/componego/examples/url-shortener-app/tests/mocks"
 )
 
@@ -22,16 +22,23 @@ func TestIntegration(t *testing.T) {
 	t.Cleanup(cancelEnv)
 	t.Run("create urls", func(t *testing.T) {
 		t.Parallel() // Parallel running of tests is supported.
-		router, err := server.CreateRouter(env)
+		_, err := env.DependencyInvoker().Invoke(func(s *test_server.TestServer) {
+			s.Run(
+				func(addRouter func(pattern string, handler any)) {
+					addRouter("PUT /create", handlers.NewRedirectPutHandler)
+					addRouter("GET /get/{key}", handlers.NewRedirectGetHandler)
+				},
+				func(baseUrl string) {
+					longUrl := fmt.Sprintf("https://%s.com/", utils.GetRandomString(100))
+					shortUrl := getShortUrl(t, baseUrl+"/create", longUrl)
+					if getLongUrl(t, shortUrl) != longUrl {
+						t.Fatal("short and long urls do not match")
+					}
+				},
+			)
+		})
 		if err != nil {
-			t.Fatalf("create router error: %s", err)
-		}
-		testServer := httptest.NewServer(router)
-		defer testServer.Close()
-		longUrl := fmt.Sprintf("https://%s.com/", utils.GetRandomString(100))
-		shortUrl := getShortUrl(t, testServer.URL+"/create", longUrl)
-		if getLongUrl(t, shortUrl) != longUrl {
-			t.Fatal("short and long urls do not match")
+			t.Fatalf("send request error: %s", err)
 		}
 	})
 }

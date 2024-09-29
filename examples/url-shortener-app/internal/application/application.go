@@ -9,8 +9,9 @@ import (
 
 	"github.com/componego/componego/examples/url-shortener-app/internal/migration"
 	"github.com/componego/componego/examples/url-shortener-app/internal/repository"
-	"github.com/componego/componego/examples/url-shortener-app/internal/server"
+	appServer "github.com/componego/componego/examples/url-shortener-app/internal/server"
 	"github.com/componego/componego/examples/url-shortener-app/pkg/components/database"
+	"github.com/componego/componego/examples/url-shortener-app/pkg/components/server"
 
 	"github.com/componego/componego/examples/url-shortener-app/third_party/config-reader"
 	_ "github.com/componego/componego/examples/url-shortener-app/third_party/db-driver"
@@ -33,6 +34,8 @@ func (a *Application) ApplicationComponents() ([]componego.Component, error) {
 		// This is the custom component implemented in this example
 		// which provides access to the database using a standard database connection interface.
 		database.NewComponent(),
+		// This is an example of server component implementation.
+		server.NewComponent(),
 	}, nil
 }
 
@@ -79,7 +82,7 @@ func (a *Application) ApplicationAction(env componego.Environment, _ any) (int, 
 		return application.ExitWrapper(err)
 	}
 	// Start server after the migrations are completed.
-	_, err := env.DependencyInvoker().Invoke(server.Run)
+	_, err := env.DependencyInvoker().Invoke(appServer.Run)
 	return application.ExitWrapper(err)
 }
 

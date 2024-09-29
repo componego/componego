@@ -4,6 +4,7 @@ import (
 	"github.com/componego/componego"
 
 	"github.com/componego/componego/examples/url-shortener-app/internal/application"
+	"github.com/componego/componego/examples/url-shortener-app/pkg/components/test-server"
 )
 
 type ApplicationMock struct {
@@ -18,20 +19,10 @@ func NewApplicationMock() *ApplicationMock {
 
 // ApplicationComponents belongs to interface componego.ApplicationComponents.
 func (a *ApplicationMock) ApplicationComponents() ([]componego.Component, error) {
-	// In this function we call the original application method and can modify it in our mock.
-	// For example, you can add or remove some returned components or completely replace the list with your components.
-	// You can also create a similar method for other application methods to replace other parts of the application in the mock.
 	components, err := a.Application.ApplicationComponents()
-	// ...
+	// Add the component that provides access to test server dependency.
+	components = append(components, test_server.NewComponent())
 	return components, err
-}
-
-func (a *ApplicationMock) ApplicationDependencies() ([]componego.Dependency, error) {
-	dependencies, err := a.Application.ApplicationDependencies()
-	// Of course, you must rewrite entities according to the rewrite rules.
-	// These rules are written in the documentation.
-	dependencies = append(dependencies, NewRedirectRepositoryMock)
-	return dependencies, err
 }
 
 // ApplicationConfigInit belongs to interface componego.ApplicationConfigInit.

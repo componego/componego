@@ -7,7 +7,7 @@ import (
 
 	"github.com/componego/componego/examples/url-shortener-app/internal/repository"
 	"github.com/componego/componego/examples/url-shortener-app/internal/server/json"
-	"github.com/componego/componego/examples/url-shortener-app/internal/server/validation"
+	"github.com/componego/componego/examples/url-shortener-app/internal/utils"
 )
 
 // -------------------- GET Redirect -------------------
@@ -40,7 +40,7 @@ func NewRedirectPutHandler(redirectRepository repository.RedirectRepository) htt
 			json.Send(w, nil, errors.New("error decoding JSON"))
 			return
 		}
-		if !validation.IsValidUrl(requestData.Url) {
+		if !utils.IsValidUrl(requestData.Url) {
 			json.Send(w, nil, errors.New("invalid url"))
 			return
 		}
